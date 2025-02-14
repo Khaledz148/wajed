@@ -13,26 +13,26 @@ const desktopWaveform = document.getElementById('desktopWaveform');
 let groupMediaRecorder;
 let isGroupRecording = false;
 
-// Participant management
+// ----- Participant Management -----
 const participants = {};
-function addParticipant(username) {
-  if (!participants[username]) {
+function addParticipant(user) {
+  if (!participants[user]) {
     const elem = document.createElement('div');
     elem.classList.add('participant');
-    elem.setAttribute('data-username', username);
-    elem.innerText = username;
+    elem.setAttribute('data-username', user);
+    elem.innerText = user;
     participantGrid.appendChild(elem);
-    participants[username] = elem;
+    participants[user] = elem;
   }
 }
-function removeParticipant(username) {
-  if (participants[username]) {
-    participantGrid.removeChild(participants[username]);
-    delete participants[username];
+function removeParticipant(user) {
+  if (participants[user]) {
+    participantGrid.removeChild(participants[user]);
+    delete participants[user];
   }
 }
-function animateParticipant(username) {
-  const elem = participants[username];
+function animateParticipant(user) {
+  const elem = participants[user];
   if (elem) {
     elem.classList.add('speaking');
     setTimeout(() => { elem.classList.remove('speaking'); }, 2000);
@@ -41,7 +41,7 @@ function animateParticipant(username) {
 const desktopUsername = "المشاهد";
 addParticipant(desktopUsername);
 
-// Automatically switch UI based on group activity
+// ----- Automatic UI Switching Based on Group Activity -----
 socket.on('groupActive', (data) => {
   if (data.active) {
     groupChatContainer.style.display = 'block';
@@ -54,7 +54,8 @@ socket.on('groupActive', (data) => {
   }
 });
 
-// TTS helpers: extract message text and speak it (only the message, not the sender)
+// ----- Text-to-Speech Helpers -----
+// Extract only the message (remove sender label)
 function extractMessageText(html) {
   const temp = document.createElement('div');
   temp.innerHTML = html;
@@ -72,7 +73,7 @@ function speakText(text) {
   speechSynthesis.speak(utterance);
 }
 
-// Helper function to append messages and trigger TTS if needed
+// ----- Append Message Helper -----
 function appendMessage(container, message, tts = false) {
   const div = document.createElement('div');
   div.innerHTML = message;
@@ -83,7 +84,7 @@ function appendMessage(container, message, tts = false) {
   }
 }
 
-// Regular chat messages
+// ----- Regular Chat Messages -----
 socket.on('textMessage', (data) => {
   appendMessage(chatArea, `<strong>رسالة:</strong> ${data.message}`, true);
 });
@@ -94,7 +95,7 @@ socket.on('drawing', (data) => {
   appendMessage(chatArea, `<strong>رسم:</strong><br><img src="${data.image}" style="max-width:100%;">`);
 });
 
-// Group chat messages
+// ----- Group Chat Messages -----
 socket.on('groupMessage', (data) => {
   const htmlMsg = `<strong>${data.username}:</strong> ${data.message}`;
   appendMessage(groupChatArea, htmlMsg, true);
@@ -109,16 +110,17 @@ socket.on('groupVoiceChunk', (data) => {
   audio.play();
 });
 
-// Update participant grid
+// ----- Update Participant Grid -----
 socket.on('groupJoined', (data) => { addParticipant(data.username); });
 socket.on('groupLeft', (data) => { removeParticipant(data.username); });
 
-// Push-to-Talk: Use MediaRecorder with timeslice for near-real-time audio streaming.
+// ----- Push-to-Talk for Group Chat (Live Streaming) -----
+// Use MediaRecorder with a 100ms timeslice for near–real-time streaming.
 function startGroupRecording() {
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
       groupMediaRecorder = new MediaRecorder(stream);
-      groupMediaRecorder.start(250); // send chunks every 250ms
+      groupMediaRecorder.start(100);
       isGroupRecording = true;
       groupMediaRecorder.addEventListener("dataavailable", event => {
         const reader = new FileReader();

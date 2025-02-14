@@ -4,21 +4,21 @@ const socket = io();
 let inGroup = false;
 let username = ""; // will be set via modal
 
-// ---------- Name Modal Handling ----------
+// ----- Name Modal Handling -----
 const nameModal = $('#nameModal');
 const usernameInput = document.getElementById('usernameInput');
 const saveUsernameBtn = document.getElementById('saveUsernameBtn');
 
 saveUsernameBtn.addEventListener('click', () => {
   const val = usernameInput.value.trim();
-  if(val !== ""){
+  if (val !== "") {
     username = val;
     nameModal.modal('hide');
   }
 });
-nameModal.modal('show');  // force name entry on load
+nameModal.modal('show'); // Force name entry on load
 
-// ---------- Regular Chat Elements ----------
+// ----- Regular Chat Elements -----
 const regularChatContainer = document.getElementById('regularChatContainer');
 const chatArea = document.getElementById('chatArea');
 const chatInput = document.getElementById('chatInput');
@@ -27,16 +27,15 @@ const voiceRecordBtn = document.getElementById('voiceRecordBtn');
 const micIcon = document.getElementById('micIcon');
 const waveform = document.getElementById('waveform');
 
-// ---------- Group Chat Elements ----------
+// ----- Group Chat Elements -----
 const groupChatContainer = document.getElementById('groupChatContainer');
 const participantGrid = document.getElementById('participantGrid');
-const groupChatArea = document.getElementById('groupChatArea');
-const groupChatInput = document.getElementById('groupChatInput'); // if added later for text messages in group
-const sendGroupTextBtn = document.getElementById('sendGroupTextBtn'); // if added
+// (Optional: If you add a group text input, add it here)
+// For push-to-talk:
 const groupPushToTalkBtn = document.getElementById('groupPushToTalkBtn');
 const mobileDesktopWaveform = document.getElementById('mobileDesktopWaveform');
 
-// ---------- Drawing Modal Elements ----------
+// ----- Drawing Modal Elements -----
 const drawingBtn = document.getElementById('drawingBtn');
 const groupChatBtn = document.getElementById('groupChatBtn');
 const groupCountBadge = document.getElementById('groupCountBadge');
@@ -49,26 +48,26 @@ const drawingCtx = drawingCanvas.getContext('2d');
 let currentColor = '#000000';
 let drawing = false;
 
-// ---------- Participant Management for Group Mode ----------
+// ----- Participant Management for Group Mode -----
 const participants = {}; // key: username, value: element
-function addParticipant(username) {
-  if (!participants[username]) {
+function addParticipant(user) {
+  if (!participants[user]) {
     const elem = document.createElement('div');
     elem.classList.add('participant');
-    elem.setAttribute('data-username', username);
-    elem.innerText = username;
+    elem.setAttribute('data-username', user);
+    elem.innerText = user;
     participantGrid.appendChild(elem);
-    participants[username] = elem;
+    participants[user] = elem;
   }
 }
-function removeParticipant(username) {
-  if (participants[username]) {
-    participantGrid.removeChild(participants[username]);
-    delete participants[username];
+function removeParticipant(user) {
+  if (participants[user]) {
+    participantGrid.removeChild(participants[user]);
+    delete participants[user];
   }
 }
-function animateParticipant(username) {
-  const elem = participants[username];
+function animateParticipant(user) {
+  const elem = participants[user];
   if (elem) {
     elem.classList.add('speaking');
     setTimeout(() => {
@@ -77,7 +76,7 @@ function animateParticipant(username) {
   }
 }
 
-// ---------- Toggle Group Mode ----------
+// ----- Toggle Group Mode -----
 groupChatBtn.addEventListener('click', () => {
   if (!inGroup) {
     socket.emit('joinGroup', { username });
@@ -93,7 +92,7 @@ groupChatBtn.addEventListener('click', () => {
   }
 });
 
-// ---------- Regular Chat Functions ----------
+// ----- Regular Chat Functions -----
 function sendTextMessage() {
   const text = chatInput.value.trim();
   if (!text) return;
@@ -139,17 +138,15 @@ voiceRecordBtn.addEventListener('click', () => {
   }
 });
 
-// ---------- Group Chat Push-to-Talk (Live Streaming) ----------
-// Use MediaRecorder with a timeslice so that each data chunk is sent immediately.
+// ----- Group Chat Push-to-Talk (Live Streaming) -----
+// Use MediaRecorder with a timeslice of 100ms for near real-time streaming.
 let groupMediaRecorder;
 let isGroupRecording = false;
-
 function startGroupRecording() {
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
       groupMediaRecorder = new MediaRecorder(stream);
-      // Start recording with a timeslice (250ms)
-      groupMediaRecorder.start(250);
+      groupMediaRecorder.start(100); // Send chunks every 100ms
       isGroupRecording = true;
       groupMediaRecorder.addEventListener("dataavailable", event => {
         const reader = new FileReader();
@@ -174,7 +171,7 @@ groupPushToTalkBtn.addEventListener('mouseup', stopGroupRecording);
 groupPushToTalkBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startGroupRecording(); });
 groupPushToTalkBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopGroupRecording(); });
 
-// ---------- Drawing Functions ----------
+// ----- Drawing Functions -----
 // Mouse events
 drawingCanvas.addEventListener('mousedown', (e) => {
   drawing = true;
@@ -192,7 +189,7 @@ drawingCanvas.addEventListener('mousemove', (e) => {
 drawingCanvas.addEventListener('mouseup', () => {
   drawing = false;
 });
-// Touch events for mobile drawing support
+// Touch events (with e.preventDefault() and correct coordinate calculations)
 drawingCanvas.addEventListener('touchstart', (e) => {
   e.preventDefault();
   const touch = e.touches[0];
@@ -233,13 +230,12 @@ colorButtons.forEach(btn => {
   });
 });
 
-// ---------- Socket Listeners ----------
+// ----- Socket Listeners -----
 // Regular chat messages
 socket.on('textMessage', (data) => {
-  const htmlMsg = `<strong>رسالة:</strong> ${data.message}`;
   const bubble = document.createElement('div');
   bubble.classList.add('chat-bubble');
-  bubble.innerHTML = htmlMsg;
+  bubble.innerHTML = `<strong>رسالة:</strong> ${data.message}`;
   chatArea.appendChild(bubble);
   chatArea.scrollTop = chatArea.scrollHeight;
 });
@@ -265,8 +261,6 @@ socket.on('groupMessage', (data) => {
   div.innerHTML = htmlMsg;
   groupChatArea.appendChild(div);
   groupChatArea.scrollTop = groupChatArea.scrollHeight;
-  // Use TTS to read the message text (without sender label)
-  speakText(extractMessageText(htmlMsg));
 });
 socket.on('groupVoiceMessage', (data) => {
   const div = document.createElement('div');
@@ -275,7 +269,7 @@ socket.on('groupVoiceMessage', (data) => {
   groupChatArea.scrollTop = groupChatArea.scrollHeight;
   animateParticipant(data.username);
 });
-// Live audio chunks for near-real-time streaming in group chat
+// Live streaming audio chunks
 socket.on('groupVoiceChunk', (data) => {
   const audio = new Audio(data.chunk);
   audio.play();
@@ -285,28 +279,5 @@ socket.on('groupVoiceChunk', (data) => {
 socket.on('groupCount', (data) => {
   groupCountBadge.innerText = data.count;
 });
-// Update participant grid on join/leave
-socket.on('groupJoined', (data) => {
-  addParticipant(data.username);
-});
-socket.on('groupLeft', (data) => {
-  removeParticipant(data.username);
-});
-
-// Helper functions for TTS: Extract message text (omit sender label) and speak it.
-function extractMessageText(html) {
-  let temp = document.createElement('div');
-  temp.innerHTML = html;
-  let text = temp.innerText || temp.textContent || "";
-  let colonIndex = text.indexOf(':');
-  if(colonIndex !== -1) {
-    return text.substring(colonIndex+1).trim();
-  }
-  return text.trim();
-}
-function speakText(text) {
-  if(text === "") return;
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'ar-SA'; // Arabic (Saudi Arabia)
-  speechSynthesis.speak(utterance);
-}
+socket.on('groupJoined', (data) => { addParticipant(data.username); });
+socket.on('groupLeft', (data) => { removeParticipant(data.username); });
