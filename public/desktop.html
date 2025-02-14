@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>واجهة الكمبيوتر - دردشة ومجلس</title>
+  <title>واجهة الكمبيوتر</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -26,6 +26,7 @@
       padding: 0;
       position: relative;
       overflow-x: hidden;
+      font-size: 1.3em; /* larger text for better readability */
     }
     /* Particles background */
     #particles-js {
@@ -41,39 +42,28 @@
       z-index: 1;
       position: relative;
     }
-    /* Header tabs for switching views */
-    .header-tabs {
-      display: flex;
-      justify-content: center;
+    /* Simple header */
+    h1 {
+      text-align: center;
       margin-bottom: 20px;
-    }
-    .header-tabs button {
-      margin: 0 10px;
-      padding: 10px 20px;
-      border: none;
-      background-color: var(--color2);
-      color: var(--color1);
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .header-tabs button.active {
-      background-color: var(--color3);
     }
     /* Regular Chat Container */
     #regularChatContainer {
-      border: 1px solid var(--color4);
+      border: 2px solid var(--color4);
       background: var(--color1);
       padding: 10px;
       height: 300px;
       overflow-y: auto;
       margin-bottom: 20px;
+      border-radius: 8px;
     }
     /* Group Chat Container */
     #groupChatContainer {
-      border: 1px solid var(--color4);
+      border: 2px solid var(--color4);
       background: var(--color1);
       padding: 10px;
       margin-bottom: 20px;
+      border-radius: 8px;
       display: none;
     }
     /* Participant grid */
@@ -95,6 +85,7 @@
       justify-content: center;
       font-weight: bold;
       color: var(--color4);
+      font-size: 1em;
     }
     .participant.speaking {
       border-color: var(--color2);
@@ -109,10 +100,11 @@
     #groupChatArea {
       height: 200px;
       overflow-y: auto;
-      border: 1px solid var(--color4);
+      border: 2px solid var(--color4);
       background: var(--color1);
       padding: 10px;
       margin-bottom: 10px;
+      border-radius: 8px;
     }
     /* Desktop waveform indicator for push-to-talk */
     #desktopWaveform {
@@ -126,9 +118,9 @@
       display: none;
     }
     #desktopWaveform .bar {
-      width: 4px;
-      height: 10px;
-      margin: 0 2px;
+      width: 6px;
+      height: 15px;
+      margin: 0 3px;
       background-color: var(--color2);
       animation: pulse 1s infinite;
     }
@@ -137,19 +129,20 @@
     #desktopWaveform .bar:nth-child(4) { animation-delay: 0.6s; }
     #desktopWaveform .bar:nth-child(5) { animation-delay: 0.8s; }
     @keyframes pulse {
-      0% { height: 10px; }
-      50% { height: 20px; }
-      100% { height: 10px; }
+      0% { height: 15px; }
+      50% { height: 30px; }
+      100% { height: 15px; }
     }
     /* Push-to-Talk button */
     #pushToTalkBtn {
       width: 100%;
-      padding: 10px;
+      padding: 15px;
       background-color: var(--color2);
       border: none;
       color: var(--color1);
       border-radius: 5px;
       cursor: pointer;
+      font-size: 1.2em;
     }
   </style>
 </head>
@@ -158,17 +151,14 @@
   <div id="particles-js"></div>
   
   <div class="container">
-    <div class="header-tabs">
-      <button id="regularChatTab" class="active">الدردشة العادية</button>
-      <button id="groupChatTab">المجلس</button>
-    </div>
+    <h1>واجهة الكمبيوتر</h1>
     
-    <!-- Regular Chat Container -->
+    <!-- Regular Chat Container (for text/drawing/voice outside group) -->
     <div id="regularChatContainer">
       <!-- Chat messages will appear here -->
     </div>
     
-    <!-- Group Chat Container -->
+    <!-- Group Chat Container (المجلس) -->
     <div id="groupChatContainer">
       <div id="participantGrid"></div>
       <div id="groupChatArea"></div>
@@ -191,7 +181,7 @@
   <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <script src="/js/desktop.js"></script>
   <script>
-    /* Initialize particles.js with custom settings using our color palette */
+    /* Initialize particles.js using our color palette */
     particlesJS("particles-js", {
       "particles": {
         "number": {
