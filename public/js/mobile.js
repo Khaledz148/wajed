@@ -2,7 +2,21 @@
 
 const socket = io();
 let inGroup = false;
-const username = prompt("أدخل اسمك:") || "مستخدم";
+let username = ""; // will be set via modal
+
+// ---------- Name Modal Handling ----------
+const nameModal = $('#nameModal');
+const usernameInput = document.getElementById('usernameInput');
+const saveUsernameBtn = document.getElementById('saveUsernameBtn');
+
+saveUsernameBtn.addEventListener('click', () => {
+  const val = usernameInput.value.trim();
+  if(val !== ""){
+    username = val;
+    nameModal.modal('hide');
+  }
+});
+nameModal.modal('show');  // force name entry on load
 
 // ---------- Regular Chat Elements ----------
 const regularChatContainer = document.getElementById('regularChatContainer');
@@ -17,8 +31,8 @@ const waveform = document.getElementById('waveform');
 const groupChatContainer = document.getElementById('groupChatContainer');
 const participantGrid = document.getElementById('participantGrid');
 const groupChatArea = document.getElementById('groupChatArea');
-const groupChatInput = document.getElementById('groupChatInput');
-const sendGroupTextBtn = document.getElementById('sendGroupTextBtn');
+const groupChatInput = document.getElementById('groupChatInput'); // if added later for text messages in group
+const sendGroupTextBtn = document.getElementById('sendGroupTextBtn'); // if added
 const groupPushToTalkBtn = document.getElementById('groupPushToTalkBtn');
 const mobileDesktopWaveform = document.getElementById('mobileDesktopWaveform');
 
@@ -42,7 +56,7 @@ function addParticipant(username) {
     const elem = document.createElement('div');
     elem.classList.add('participant');
     elem.setAttribute('data-username', username);
-    elem.innerHTML = username;
+    elem.innerText = username;
     participantGrid.appendChild(elem);
     participants[username] = elem;
   }
@@ -68,15 +82,12 @@ groupChatBtn.addEventListener('click', () => {
   if (!inGroup) {
     socket.emit('joinGroup', { username });
     inGroup = true;
-    // Switch to group mode UI
     regularChatContainer.style.display = 'none';
     groupChatContainer.style.display = 'block';
-    // Optionally add self to participant grid
     addParticipant(username);
   } else {
     socket.emit('leaveGroup', { username });
     inGroup = false;
-    // Switch back to regular chat UI
     groupChatContainer.style.display = 'none';
     regularChatContainer.style.display = 'block';
   }
@@ -128,60 +139,43 @@ voiceRecordBtn.addEventListener('click', () => {
   }
 });
 
-// ---------- Group Chat Functions ----------
-sendGroupTextBtn.addEventListener('click', () => {
-  const text = groupChatInput.value.trim();
-  if (!text) return;
-  socket.emit('groupMessage', { username, message: text });
-  groupChatInput.value = '';
-});
-groupChatInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    socket.emit('groupMessage', { username, message: groupChatInput.value.trim() });
-    groupChatInput.value = '';
-  }
-});
-
+// ---------- Group Chat Push-to-Talk (Live Streaming) ----------
+// Use MediaRecorder with a timeslice so that each data chunk is sent immediately.
 let groupMediaRecorder;
-let groupAudioChunks = [];
 let isGroupRecording = false;
-groupPushToTalkBtn.addEventListener('mousedown', () => {
-  groupPushToTalkBtn.innerText = "جارٍ التسجيل...";
-  mobileDesktopWaveform.classList.remove('d-none');
+
+function startGroupRecording() {
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
       groupMediaRecorder = new MediaRecorder(stream);
-      groupMediaRecorder.start();
+      // Start recording with a timeslice (250ms)
+      groupMediaRecorder.start(250);
       isGroupRecording = true;
-      groupAudioChunks = [];
       groupMediaRecorder.addEventListener("dataavailable", event => {
-        groupAudioChunks.push(event.data);
+        const reader = new FileReader();
+        reader.readAsDataURL(event.data);
+        reader.onloadend = () => {
+          socket.emit('groupVoiceChunk', { username, chunk: reader.result });
+        };
       });
+      mobileDesktopWaveform.classList.remove('d-none');
     })
-    .catch(err => console.error('Error accessing microphone:', err));
-});
-groupPushToTalkBtn.addEventListener('mouseup', () => {
-  groupPushToTalkBtn.innerText = "اضغط للتحدث";
-  mobileDesktopWaveform.classList.add('d-none');
+    .catch(err => console.error('Error accessing microphone for group:', err));
+}
+function stopGroupRecording() {
   if (isGroupRecording) {
     groupMediaRecorder.stop();
     isGroupRecording = false;
-    groupMediaRecorder.addEventListener("stop", () => {
-      const audioBlob = new Blob(groupAudioChunks, { type: 'audio/webm' });
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      reader.onloadend = () => {
-        socket.emit('groupVoiceMessage', { username, audio: reader.result });
-        animateParticipant(username);
-      };
-    });
+    mobileDesktopWaveform.classList.add('d-none');
   }
-});
+}
+groupPushToTalkBtn.addEventListener('mousedown', startGroupRecording);
+groupPushToTalkBtn.addEventListener('mouseup', stopGroupRecording);
+groupPushToTalkBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startGroupRecording(); });
+groupPushToTalkBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopGroupRecording(); });
 
 // ---------- Drawing Functions ----------
-drawingBtn.addEventListener('click', () => {
-  drawingModal.modal('show');
-});
+// Mouse events
 drawingCanvas.addEventListener('mousedown', (e) => {
   drawing = true;
   drawingCtx.beginPath();
@@ -196,6 +190,30 @@ drawingCanvas.addEventListener('mousemove', (e) => {
   }
 });
 drawingCanvas.addEventListener('mouseup', () => {
+  drawing = false;
+});
+// Touch events for mobile drawing support
+drawingCanvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = drawingCanvas.getBoundingClientRect();
+  drawing = true;
+  drawingCtx.beginPath();
+  drawingCtx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+});
+drawingCanvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (drawing) {
+    const touch = e.touches[0];
+    const rect = drawingCanvas.getBoundingClientRect();
+    drawingCtx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+    drawingCtx.strokeStyle = currentColor;
+    drawingCtx.lineWidth = 2;
+    drawingCtx.stroke();
+  }
+});
+drawingCanvas.addEventListener('touchend', (e) => {
+  e.preventDefault();
   drawing = false;
 });
 clearCanvasBtn.addEventListener('click', () => {
@@ -218,16 +236,17 @@ colorButtons.forEach(btn => {
 // ---------- Socket Listeners ----------
 // Regular chat messages
 socket.on('textMessage', (data) => {
+  const htmlMsg = `<strong>رسالة:</strong> ${data.message}`;
   const bubble = document.createElement('div');
   bubble.classList.add('chat-bubble');
-  bubble.innerHTML = `<strong>رسالة:</strong> ${data.message}`;
+  bubble.innerHTML = htmlMsg;
   chatArea.appendChild(bubble);
   chatArea.scrollTop = chatArea.scrollHeight;
 });
 socket.on('voiceMessage', (data) => {
   const bubble = document.createElement('div');
   bubble.classList.add('chat-bubble');
-  bubble.innerHTML = `<strong>رسالة صوتية:</strong> <audio controls src="${data.audio}"></audio>`;
+  bubble.innerHTML = `<strong>رسالة صوتية:</strong> <audio controls src="${data.audio}" autoplay></audio>`;
   chatArea.appendChild(bubble);
   chatArea.scrollTop = chatArea.scrollHeight;
 });
@@ -241,24 +260,31 @@ socket.on('drawing', (data) => {
 
 // Group chat messages
 socket.on('groupMessage', (data) => {
+  const htmlMsg = `<strong>${data.username}:</strong> ${data.message}`;
   const div = document.createElement('div');
-  div.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
+  div.innerHTML = htmlMsg;
   groupChatArea.appendChild(div);
   groupChatArea.scrollTop = groupChatArea.scrollHeight;
+  // Use TTS to read the message text (without sender label)
+  speakText(extractMessageText(htmlMsg));
 });
 socket.on('groupVoiceMessage', (data) => {
   const div = document.createElement('div');
-  div.innerHTML = `<strong>${data.username} (صوت):</strong> <audio controls src="${data.audio}"></audio>`;
+  div.innerHTML = `<strong>${data.username} (صوت):</strong> <audio controls src="${data.audio}" autoplay></audio>`;
   groupChatArea.appendChild(div);
   groupChatArea.scrollTop = groupChatArea.scrollHeight;
   animateParticipant(data.username);
+});
+// Live audio chunks for near-real-time streaming in group chat
+socket.on('groupVoiceChunk', (data) => {
+  const audio = new Audio(data.chunk);
+  audio.play();
 });
 
 // Update group count badge
 socket.on('groupCount', (data) => {
   groupCountBadge.innerText = data.count;
 });
-
 // Update participant grid on join/leave
 socket.on('groupJoined', (data) => {
   addParticipant(data.username);
@@ -266,13 +292,21 @@ socket.on('groupJoined', (data) => {
 socket.on('groupLeft', (data) => {
   removeParticipant(data.username);
 });
-// When group mode becomes active/inactive (for all clients)
-socket.on('groupActive', (data) => {
-  if (data.active) {
-    groupChatContainer.style.display = 'block';
-  } else {
-    groupChatContainer.style.display = 'none';
-    participantGrid.innerHTML = "";
-    groupChatArea.innerHTML = "";
+
+// Helper functions for TTS: Extract message text (omit sender label) and speak it.
+function extractMessageText(html) {
+  let temp = document.createElement('div');
+  temp.innerHTML = html;
+  let text = temp.innerText || temp.textContent || "";
+  let colonIndex = text.indexOf(':');
+  if(colonIndex !== -1) {
+    return text.substring(colonIndex+1).trim();
   }
-});
+  return text.trim();
+}
+function speakText(text) {
+  if(text === "") return;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'ar-SA'; // Arabic (Saudi Arabia)
+  speechSynthesis.speak(utterance);
+}

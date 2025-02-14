@@ -9,17 +9,13 @@ app.use(express.static('public'));
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
-  // Regular text messages
+  // Regular messages
   socket.on('textMessage', (data) => {
     io.emit('textMessage', data);
   });
-
-  // Regular voice messages
   socket.on('voiceMessage', (data) => {
     io.emit('voiceMessage', data);
   });
-
-  // Drawing messages
   socket.on('drawing', (data) => {
     io.emit('drawing', data);
   });
@@ -49,6 +45,11 @@ io.on('connection', (socket) => {
 
   socket.on('groupMessage', (data) => {
     io.to('majlis').emit('groupMessage', data);
+  });
+
+  // NEW: Live streaming of audio chunks from push-to-talk
+  socket.on('groupVoiceChunk', (data) => {
+    io.to('majlis').emit('groupVoiceChunk', data);
   });
 
   socket.on('groupVoiceMessage', (data) => {
