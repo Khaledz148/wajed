@@ -41,6 +41,9 @@ function animateParticipant(user) {
 const desktopUsername = "المشاهد";
 addParticipant(desktopUsername);
 
+// ***** NEW: Join the group so this client receives group events *****
+socket.emit('joinGroup', { username: desktopUsername });
+
 // ----- Automatic UI Switching Based on Group Activity -----
 socket.on('groupActive', (data) => {
   if (data.active) {
@@ -55,7 +58,6 @@ socket.on('groupActive', (data) => {
 });
 
 // ----- Text-to-Speech Helpers -----
-// Extract only the message (remove sender label)
 function extractMessageText(html) {
   const temp = document.createElement('div');
   temp.innerHTML = html;
