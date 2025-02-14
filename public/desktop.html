@@ -2,7 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>عرض المحتوى - الكمبيوتر</title>
+  <title>واجهة الكمبيوتر - دردشة ومجلس</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <!-- FontAwesome -->
@@ -11,28 +12,71 @@
   <link href="https://fonts.googleapis.com/css?family=Cairo&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
   <style>
+    :root {
+      --color1: #DCD7C9;
+      --color2: #A27B5C;
+      --color3: #3F4F44;
+      --color4: #2C3930;
+    }
     body {
       font-family: 'Cairo', sans-serif;
-      background-color: #e9ecef;
+      background-color: var(--color1);
+      color: var(--color4);
+      margin: 0;
+      padding: 0;
+      position: relative;
+      overflow-x: hidden;
+    }
+    /* Particles background */
+    #particles-js {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
     }
     .container {
       margin-top: 20px;
+      z-index: 1;
+      position: relative;
     }
-    /* Chat area styles */
-    #chatArea {
-      height: 300px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      background: #fff;
-      padding: 10px;
+    /* Header tabs for switching views */
+    .header-tabs {
+      display: flex;
+      justify-content: center;
       margin-bottom: 20px;
     }
-    /* Group section styles */
-    #groupDisplaySection {
-      border: 1px solid #ccc;
-      background: #fff;
-      padding: 10px;
+    .header-tabs button {
+      margin: 0 10px;
+      padding: 10px 20px;
+      border: none;
+      background-color: var(--color2);
+      color: var(--color1);
+      border-radius: 5px;
+      cursor: pointer;
     }
+    .header-tabs button.active {
+      background-color: var(--color3);
+    }
+    /* Regular Chat Container */
+    #regularChatContainer {
+      border: 1px solid var(--color4);
+      background: var(--color1);
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+    /* Group Chat Container */
+    #groupChatContainer {
+      border: 1px solid var(--color4);
+      background: var(--color1);
+      padding: 10px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    /* Participant grid */
     #participantGrid {
       display: flex;
       flex-wrap: wrap;
@@ -43,33 +87,34 @@
     .participant {
       width: 100px;
       height: 100px;
-      background-color: #fff;
-      border: 2px solid #ccc;
+      background-color: var(--color1);
+      border: 2px solid var(--color4);
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
       font-weight: bold;
+      color: var(--color4);
     }
     .participant.speaking {
-      border-color: #28a745;
+      border-color: var(--color2);
       animation: wave 1s infinite;
     }
     @keyframes wave {
-      0% { box-shadow: 0 0 5px #28a745; }
-      50% { box-shadow: 0 0 20px #28a745; }
-      100% { box-shadow: 0 0 5px #28a745; }
+      0% { box-shadow: 0 0 5px var(--color2); }
+      50% { box-shadow: 0 0 20px var(--color2); }
+      100% { box-shadow: 0 0 5px var(--color2); }
     }
+    /* Group chat area */
     #groupChatArea {
       height: 200px;
       overflow-y: auto;
-      border: 1px solid #ccc;
-      background: #fff;
+      border: 1px solid var(--color4);
+      background: var(--color1);
       padding: 10px;
       margin-bottom: 10px;
     }
-    /* Desktop waveform indicator */
+    /* Desktop waveform indicator for push-to-talk */
     #desktopWaveform {
       display: flex;
       justify-content: center;
@@ -84,7 +129,7 @@
       width: 4px;
       height: 10px;
       margin: 0 2px;
-      background-color: #dc3545;
+      background-color: var(--color2);
       animation: pulse 1s infinite;
     }
     #desktopWaveform .bar:nth-child(2) { animation-delay: 0.2s; }
@@ -96,20 +141,37 @@
       50% { height: 20px; }
       100% { height: 10px; }
     }
+    /* Push-to-Talk button */
+    #pushToTalkBtn {
+      width: 100%;
+      padding: 10px;
+      background-color: var(--color2);
+      border: none;
+      color: var(--color1);
+      border-radius: 5px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
+  <!-- Particles Background -->
+  <div id="particles-js"></div>
+  
   <div class="container">
-    <!-- Chat Area for regular messages (text, drawing, voice outside group) -->
-    <div id="chatArea"></div>
+    <div class="header-tabs">
+      <button id="regularChatTab" class="active">الدردشة العادية</button>
+      <button id="groupChatTab">المجلس</button>
+    </div>
     
-    <!-- Group Section (المجلس) -->
-    <div id="groupDisplaySection" class="d-none">
-      <!-- Participant Grid -->
+    <!-- Regular Chat Container -->
+    <div id="regularChatContainer">
+      <!-- Chat messages will appear here -->
+    </div>
+    
+    <!-- Group Chat Container -->
+    <div id="groupChatContainer">
       <div id="participantGrid"></div>
-      <!-- Group Chat Area for group text/voice messages -->
       <div id="groupChatArea"></div>
-      <!-- Waveform indicator for push-to-talk -->
       <div id="desktopWaveform" class="d-none">
         <div class="bar"></div>
         <div class="bar"></div>
@@ -117,16 +179,85 @@
         <div class="bar"></div>
         <div class="bar"></div>
       </div>
-      <!-- Push-to-Talk Button -->
-      <button id="pushToTalkBtn" class="btn btn-danger">اضغط للتحدث</button>
+      <button id="pushToTalkBtn">اضغط للتحدث</button>
     </div>
   </div>
 
   <!-- Socket.io -->
   <script src="/socket.io/socket.io.js"></script>
-  <!-- jQuery and Bootstrap JS -->
+  <!-- jQuery, Bootstrap, and Particles.js -->
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <script src="/js/desktop.js"></script>
+  <script>
+    /* Initialize particles.js with custom settings using our color palette */
+    particlesJS("particles-js", {
+      "particles": {
+        "number": {
+          "value": 80,
+          "density": {
+            "enable": true,
+            "value_area": 800
+          }
+        },
+        "color": {
+          "value": "#A27B5C"
+        },
+        "shape": {
+          "type": "circle"
+        },
+        "opacity": {
+          "value": 0.5,
+          "random": false
+        },
+        "size": {
+          "value": 3,
+          "random": true
+        },
+        "line_linked": {
+          "enable": true,
+          "distance": 150,
+          "color": "#3F4F44",
+          "opacity": 0.4,
+          "width": 1
+        },
+        "move": {
+          "enable": true,
+          "speed": 4,
+          "direction": "none",
+          "random": false,
+          "straight": false,
+          "out_mode": "out"
+        }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": {
+            "enable": true,
+            "mode": "grab"
+          },
+          "onclick": {
+            "enable": true,
+            "mode": "push"
+          },
+          "resize": true
+        },
+        "modes": {
+          "grab": {
+            "distance": 140,
+            "line_linked": {
+              "opacity": 1
+            }
+          },
+          "push": {
+            "particles_nb": 4
+          }
+        }
+      },
+      "retina_detect": true
+    });
+  </script>
 </body>
 </html>

@@ -2,56 +2,34 @@
 
 const socket = io();
 
+// Containers for the two chat views
+const regularChatContainer = document.getElementById('regularChatContainer');
 const chatArea = document.getElementById('chatArea');
-const groupDisplaySection = document.getElementById('groupDisplaySection');
+const groupChatContainer = document.getElementById('groupChatContainer');
 const groupChatArea = document.getElementById('groupChatArea');
 const pushToTalkBtn = document.getElementById('pushToTalkBtn');
 const participantGrid = document.getElementById('participantGrid');
 const desktopWaveform = document.getElementById('desktopWaveform');
 
+// Tab buttons
+const regularChatTab = document.getElementById('regularChatTab');
+const groupChatTab = document.getElementById('groupChatTab');
+
+// For push-to-talk recording
 let groupMediaRecorder;
 let groupAudioChunks = [];
 let isGroupRecording = false;
 
+// Manage participants (for group view)
 const participants = {}; // key: username, value: participant element
-
-// Helper function to append messages to a container
-function appendMessage(container, message) {
-  const div = document.createElement('div');
-  div.innerHTML = message;
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-}
-
-// Listen for regular text messages and drawings; add them to chatArea
-socket.on('textMessage', (data) => {
-  appendMessage(chatArea, `<strong>رسالة:</strong> ${data.message}`);
-});
-socket.on('drawing', (data) => {
-  appendMessage(chatArea, `<strong>رسم:</strong><br><img src="${data.image}" style="max-width:100%;">`);
-});
-socket.on('voiceMessage', (data) => {
-  appendMessage(chatArea, `<strong>رسالة صوتية:</strong> <audio controls src="${data.audio}" autoplay></audio>`);
-});
-
-// For group messages, append them to groupChatArea
-socket.on('groupMessage', (data) => {
-  appendMessage(groupChatArea, `<strong>${data.username}:</strong> ${data.message}`);
-});
-socket.on('groupVoiceMessage', (data) => {
-  appendMessage(groupChatArea, `<strong>${data.username} (صوت):</strong> <audio controls src="${data.audio}" autoplay></audio>`);
-  animateParticipant(data.username);
-});
-
-// Participant grid functions
 function addParticipant(username) {
   if (!participants[username]) {
-    const participantElem = document.createElement('div');
-    participantElem.classList.add('participant');
-    participantElem.setAttribute('data-username', username);
-    participantElem.innerHTML = username;
-    participantGrid.appendChild(participantElem);
-    participants[username] = participantElem;
+    const elem = document.createElement('div');
+    elem.classList.add('participant');
+    elem.setAttribute('data-username', username);
+    elem.innerHTML = username;
+    participantGrid.appendChild(elem);
+    participants[username] = elem;
   }
 }
 function removeParticipant(username) {
@@ -61,20 +39,20 @@ function removeParticipant(username) {
   }
 }
 function animateParticipant(username) {
-  const participantElem = participants[username];
-  if (participantElem) {
-    participantElem.classList.add('speaking');
+  const elem = participants[username];
+  if (elem) {
+    elem.classList.add('speaking');
     setTimeout(() => {
-      participantElem.classList.remove('speaking');
+      elem.classList.remove('speaking');
     }, 2000);
   }
 }
 
-// Add self (desktop user) to the participant grid for group chat
+// Add self to participant grid for group chat
 const desktopUsername = "المشاهد";
 addParticipant(desktopUsername);
 
-// Push-to-Talk functionality with waveform indicator
+// Push-to-Talk functionality for group voice messages
 pushToTalkBtn.addEventListener('mousedown', () => {
   pushToTalkBtn.innerText = "جارٍ التسجيل...";
   desktopWaveform.classList.remove('d-none');
@@ -88,11 +66,8 @@ pushToTalkBtn.addEventListener('mousedown', () => {
         groupAudioChunks.push(event.data);
       });
     })
-    .catch(err => {
-      console.error('Error accessing microphone:', err);
-    });
+    .catch(err => console.error('Error accessing microphone:', err));
 });
-
 pushToTalkBtn.addEventListener('mouseup', () => {
   pushToTalkBtn.innerText = "اضغط للتحدث";
   desktopWaveform.classList.add('d-none');
@@ -104,15 +79,42 @@ pushToTalkBtn.addEventListener('mouseup', () => {
       const reader = new FileReader();
       reader.readAsDataURL(audioBlob);
       reader.onloadend = () => {
-        const base64Audio = reader.result;
-        socket.emit('groupVoiceMessage', { username: desktopUsername, audio: base64Audio });
+        socket.emit('groupVoiceMessage', { username: desktopUsername, audio: reader.result });
         animateParticipant(desktopUsername);
       };
     });
   }
 });
 
-// Update participant grid when group join/leave events are received
+// Listen for regular chat messages
+socket.on('textMessage', (data) => {
+  appendMessage(chatArea, `<strong>رسالة:</strong> ${data.message}`);
+});
+socket.on('voiceMessage', (data) => {
+  appendMessage(chatArea, `<strong>رسالة صوتية:</strong> <audio controls src="${data.audio}" autoplay></audio>`);
+});
+socket.on('drawing', (data) => {
+  appendMessage(chatArea, `<strong>رسم:</strong><br><img src="${data.image}" style="max-width:100%;">`);
+});
+
+// Listen for group chat messages
+socket.on('groupMessage', (data) => {
+  appendMessage(groupChatArea, `<strong>${data.username}:</strong> ${data.message}`);
+});
+socket.on('groupVoiceMessage', (data) => {
+  appendMessage(groupChatArea, `<strong>${data.username} (صوت):</strong> <audio controls src="${data.audio}" autoplay></audio>`);
+  animateParticipant(data.username);
+});
+
+// Helper function to append messages
+function appendMessage(container, message) {
+  const div = document.createElement('div');
+  div.innerHTML = message;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+// Update participant grid on join/leave
 socket.on('groupJoined', (data) => {
   addParticipant(data.username);
 });
@@ -120,13 +122,22 @@ socket.on('groupLeft', (data) => {
   removeParticipant(data.username);
 });
 
-// Show or hide the group section based on group activity
-socket.on('groupActive', (data) => {
-  if (data.active) {
-    groupDisplaySection.classList.remove('d-none');
-  } else {
-    groupDisplaySection.classList.add('d-none');
-    participantGrid.innerHTML = "";
-    groupChatArea.innerHTML = "";
+// Handle tab switching
+regularChatTab.addEventListener('click', () => {
+  if (!regularChatTab.classList.contains('active')) {
+    regularChatTab.classList.add('active');
+    groupChatTab.classList.remove('active');
+    regularChatContainer.style.display = 'block';
+    groupChatContainer.style.display = 'none';
+    socket.emit('leaveGroup', { username: desktopUsername });
+  }
+});
+groupChatTab.addEventListener('click', () => {
+  if (!groupChatTab.classList.contains('active')) {
+    groupChatTab.classList.add('active');
+    regularChatTab.classList.remove('active');
+    groupChatContainer.style.display = 'block';
+    regularChatContainer.style.display = 'none';
+    socket.emit('joinGroup', { username: desktopUsername });
   }
 });
