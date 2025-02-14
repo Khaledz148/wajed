@@ -13,10 +13,10 @@
   <link rel="stylesheet" href="/css/style.css">
   <style>
     :root {
-      --color1: #DCD7C9;
-      --color2: #A27B5C;
-      --color3: #3F4F44;
-      --color4: #2C3930;
+      --color1: #FCEBDD;
+      --color2: #441016;
+      --color3: #E26A25;
+      --color4: #b6551c;
     }
     body {
       font-family: 'Cairo', sans-serif;
@@ -180,7 +180,7 @@
 <body>
   <!-- Header Navbar -->
   <nav class="navbar navbar-light">
-    <span class="navbar-brand">تطبيق الدردشة</span>
+    <div><img src="img/l1.svg" style="height: auto; width: 150px;"></div>
     <div>
       <button id="drawingBtn" class="btn btn-outline-light mx-1" title="ارسم رسالتك">
         <i class="fas fa-paint-brush"></i>
@@ -243,8 +243,8 @@
           <canvas id="drawingCanvas" width="300" height="300" style="border:1px solid var(--color4);"></canvas>
         </div>
         <div class="modal-footer">
-          <button type="button" id="clearCanvasBtn" class="btn btn-light">مسح</button>
-          <button type="button" id="sendDrawingBtn" class="btn btn-light">إرسال الرسم</button>
+          <button type="button" id="clearCanvasBtn" class="btn btn-light" style="color: #441016;">مسح</button>
+          <button type="button" id="sendDrawingBtn" class="btn btn-light" style="color: #441016;">إرسال الرسم</button>
         </div>
       </div>
     </div>
@@ -261,7 +261,7 @@
           <input type="text" id="usernameInput" class="form-control" placeholder="اسم المستخدم">
         </div>
         <div class="modal-footer">
-          <button type="button" id="saveUsernameBtn" class="btn btn-light">حفظ</button>
+          <button type="button" id="saveUsernameBtn" class="btn btn-light" style="color: #441016;">حفظ</button>
         </div>
       </div>
     </div>

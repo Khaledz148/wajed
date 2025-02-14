@@ -1,553 +1,611 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <title>واجهة الكمبيوتر</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="UTF-8" />
+    <title>واجهة الكمبيوتر</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- (Optional) Bootstrap CSS, FontAwesome, Cairo Font -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css?family=Cairo&display=swap" rel="stylesheet">
+    <!-- (Optional) Bootstrap CSS, FontAwesome, Cairo Font -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Cairo&display=swap"
+      rel="stylesheet"
+    />
 
-  <!-- Day.js (for date/time) -->
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <!-- Day.js (for date/time) -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
 
-  <style>
-    :root {
-      --color1: #DCD7C9; /* background */
-      --color2: #A27B5C; /* accent */
-      --color3: #3F4F44; /* darker accent for bubbles */
-      --color4: #2C3930; /* main text/dark color */
-    }
-    body {
-      font-family: 'Cairo', sans-serif;
-      background-color: var(--color1);
-      color: var(--color4);
-      margin: 0; padding: 0;
-      position: relative;
-      overflow-x: hidden;
-      font-size: 1.3em;
-    }
+    <style>
+      :root {
+        --color1: #fcebdd;
+        --color2: #441016;
+        --color3: #e26a25;
+        --color4: #b6551c;
+      }
+      body {
+        font-family: "Cairo", sans-serif;
+        background-color: var(--color1);
+        color: var(--color4);
+        margin: 0;
+        padding: 0;
+        position: relative;
+        overflow-x: hidden;
+        font-size: 1.3em;
+      }
 
-    /* --- TOP BAR for date (left), prayer countdown (center), participants (right) --- */
-    #topBar {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.05);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-    /* Left: date */
-    #dateDisplay {
-      margin: 0 10px;
-      font-weight: bold;
-    }
-    /* Center: prayer countdown */
-    #prayerCountdownContainer {
-      text-align: center;
-      margin: 0 10px;
-    }
-    #prayerName {
-      font-size: 1.1em;
-      margin-bottom: 5px;
-    }
-    #prayerCountdown {
-      font-size: 1.5em;
-      font-weight: bold;
-      color: var(--color2);
-    }
-    /* Right: mini participant icons */
-    #topParticipantGrid {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin: 0 10px;
-    }
-    .mini-participant {
-      width: 40px; height: 40px;
-      background-color: var(--color1);
-      border: 2px solid var(--color4);
-      border-radius: 5px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.8em;
-      color: var(--color4);
-    }
-    .mini-participant.speaking {
-      border-color: var(--color2);
-      animation: waveMini 1s infinite;
-    }
-    @keyframes waveMini {
-      0% { box-shadow: 0 0 3px var(--color2); }
-      50% { box-shadow: 0 0 12px var(--color2); }
-      100% { box-shadow: 0 0 3px var(--color2); }
-    }
+      /* --- TOP BAR for date (left), prayer countdown (center), participants (right) --- */
+      #topBar {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+      /* Left: date */
+      #dateDisplay {
+        margin: 0 10px;
+        font-weight: bold;
+      }
+      /* Center: prayer countdown */
+      #prayerCountdownContainer {
+        text-align: center;
+        margin: 0 10px;
+      }
+      #prayerName {
+        font-size: 1.1em;
+        margin-bottom: 5px;
+      }
+      #prayerCountdown {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: var(--color2);
+      }
+      /* Right: mini participant icons */
+      #topParticipantGrid {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 0 10px;
+      }
+      .mini-participant {
+        width: 40px;
+        height: 40px;
+        background-color: var(--color1);
+        border: 2px solid var(--color4);
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8em;
+        color: var(--color4);
+      }
+      .mini-participant.speaking {
+        border-color: var(--color2);
+        animation: waveMini 1s infinite;
+      }
+      @keyframes waveMini {
+        0% {
+          box-shadow: 0 0 3px var(--color2);
+        }
+        50% {
+          box-shadow: 0 0 12px var(--color2);
+        }
+        100% {
+          box-shadow: 0 0 3px var(--color2);
+        }
+      }
 
-    /* --- Main container for chat sections --- */
-    .container {
-      margin: 20px auto;
-      max-width: 800px;
-      position: relative;
-    }
-    h1 { text-align: center; margin-bottom: 20px; }
+      /* --- Main container for chat sections --- */
+      .container {
+        margin: 20px auto;
+        max-width: 800px;
+        position: relative;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+      }
 
-    /* --- REGULAR CHAT --- */
-    #regularChatContainer {
-      border: 2px solid var(--color4);
-      background: var(--color1);
-      padding: 10px;
-      height: 300px;
-      overflow-y: auto;
-      margin-bottom: 10px;
-      border-radius: 8px;
-    }
-    /* Chat bubble: pinned left, text is RTL, aligned right */
-    .chat-bubble {
-      float: left;       /* pin to the left side */
-      clear: both;       /* each bubble on its own line */
-      direction: rtl;    /* right-to-left text direction */
-      text-align: right; /* text aligns to the right */
-      margin-bottom: 10px;
-      padding: 8px 12px;
-      border-radius: 10px;
-      max-width: 70%;
-      background-color: var(--color3);
-      color: var(--color1);
-    }
-    /* Regular chat push-to-talk */
-    #regularWaveform {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 30px;
-      margin-bottom: 10px;
-    }
-    #regularWaveform.d-none { display: none; }
-    #regularWaveform .bar {
-      width: 6px; height: 15px; margin: 0 3px;
-      background-color: var(--color2);
-      animation: pulse 1s infinite;
-    }
+      /* --- REGULAR CHAT --- */
+      #regularChatContainer {
+        border: 2px solid var(--color4);
+        background: var(--color1);
+        padding: 10px;
+        height: 300px;
+        overflow-y: auto;
+        margin-bottom: 10px;
+        border-radius: 8px;
+      }
+      /* Chat bubble: pinned left, text is RTL, aligned right */
+      .chat-bubble {
+        float: left; /* pin to the left side */
+        clear: both; /* each bubble on its own line */
+        direction: rtl; /* right-to-left text direction */
+        text-align: right; /* text aligns to the right */
+        margin-bottom: 10px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        max-width: 70%;
+        background-color: var(--color3);
+        color: var(--color1);
+      }
+      /* Regular chat push-to-talk */
+      #regularWaveform {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 30px;
+        margin-bottom: 10px;
+      }
+      #regularWaveform.d-none {
+        display: none;
+      }
+      #regularWaveform .bar {
+        width: 6px;
+        height: 15px;
+        margin: 0 3px;
+        background-color: var(--color2);
+        animation: pulse 1s infinite;
+      }
 
-    /* --- GROUP CHAT (المجلس) --- */
-    #groupChatContainer {
-      border: 2px solid var(--color4);
-      background: var(--color1);
-      padding: 10px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      display: none; /* hidden until groupActive */
-    }
-    /* We are removing the big participant grid, so no #participantGrid inside here */
-    #groupChatArea {
-      height: 200px;
-      overflow-y: auto;
-      border: 2px solid var(--color4);
-      background: var(--color1);
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-    }
-    #desktopWaveform {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 30px;
-      margin: 10px auto;
-    }
-    #desktopWaveform.d-none { display: none; }
-    #desktopWaveform .bar {
-      width: 6px; height: 15px; margin: 0 3px;
-      background-color: var(--color2);
-      animation: pulse 1s infinite;
-    }
-    @keyframes pulse {
-      0% { height: 15px; }
-      50% { height: 30px; }
-      100% { height: 15px; }
-    }
-    /* Buttons */
-    button {
-      cursor: pointer;
-      font-size: 1.1em;
-    }
-    #regularPushToTalkBtn,
-    #pushToTalkBtn {
-      width: 100%;
-      padding: 15px;
-      background-color: var(--color2);
-      border: none;
-      border-radius: 5px;
-      color: var(--color1);
-      margin-bottom: 20px;
-    }
-  </style>
-</head>
-<body>
-  <!-- Top bar: Date (left), Prayer Countdown (center), mini participants (right) -->
-  <div id="topBar">
-    <div id="dateDisplay"></div>
+      /* --- GROUP CHAT (المجلس) --- */
+      #groupChatContainer {
+        border: 2px solid var(--color4);
+        background: var(--color1);
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        display: none; /* hidden until groupActive */
+      }
+      /* We are removing the big participant grid, so no #participantGrid inside here */
+      #groupChatArea {
+        height: 200px;
+        overflow-y: auto;
+        border: 2px solid var(--color4);
+        background: var(--color1);
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+      }
+      .logo-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+      }
+      #desktopWaveform {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 30px;
+        margin: 10px auto;
+      }
+      #desktopWaveform.d-none {
+        display: none;
+      }
+      #desktopWaveform .bar {
+        width: 6px;
+        height: 15px;
+        margin: 0 3px;
+        background-color: var(--color2);
+        animation: pulse 1s infinite;
+      }
+      @keyframes pulse {
+        0% {
+          height: 15px;
+        }
+        50% {
+          height: 30px;
+        }
+        100% {
+          height: 15px;
+        }
+      }
+      /* Buttons */
+      button {
+        cursor: pointer;
+        font-size: 1.1em;
+      }
+      #regularPushToTalkBtn,
+      #pushToTalkBtn {
+        width: 100%;
+        padding: 15px;
+        background-color: var(--color2);
+        border: none;
+        border-radius: 5px;
+        color: var(--color1);
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top bar: Date (left), Prayer Countdown (center), mini participants (right) -->
+    <div id="topBar">
+      <div id="dateDisplay"></div>
 
-    <div id="prayerCountdownContainer">
-      <div id="prayerName">الفجر</div>
-      <div id="prayerCountdown">00:00:00</div>
+      <div id="prayerCountdownContainer">
+        <div id="prayerName">الفجر</div>
+        <div id="prayerCountdown">00:00:00</div>
+      </div>
+
+      <div id="topParticipantGrid"></div>
     </div>
 
-    <div id="topParticipantGrid"></div>
-  </div>
+    <div class="container">
+      <div class="logo-container">
+        <img
+          src="img/l2.svg"
+          style="height: auto; width: 150px; margin-bottom: 20px"
+        />
+      </div>
 
-  <div class="container">
-    <h1>واجهة الكمبيوتر</h1>
+      <!-- REGULAR CHAT -->
+      <div id="regularChatContainer"></div>
 
-    <!-- REGULAR CHAT -->
-    <div id="regularChatContainer"></div>
-
-    <!-- Waveform while recording in main chat -->
-    <div id="regularWaveform" class="d-none">
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-    </div>
-    <!-- Button for push-to-talk in the main chat -->
-    <button id="regularPushToTalkBtn">اضغط للتحدث في الدردشة</button>
-
-    <!-- GROUP CHAT (المجلس) -->
-    <div id="groupChatContainer">
-      <div id="groupChatArea"></div>
-
-      <div id="desktopWaveform" class="d-none">
+      <!-- Waveform while recording in main chat -->
+      <div id="regularWaveform" class="d-none">
         <div class="bar"></div>
         <div class="bar"></div>
         <div class="bar"></div>
         <div class="bar"></div>
         <div class="bar"></div>
       </div>
-      <button id="pushToTalkBtn">اضغط للتحدث في المجلس</button>
+      <!-- Button for push-to-talk in the main chat -->
+      <button id="regularPushToTalkBtn">اضغط للتحدث في الدردشة</button>
+
+      <!-- GROUP CHAT (المجلس) -->
+      <div id="groupChatContainer">
+        <div id="groupChatArea"></div>
+
+        <div id="desktopWaveform" class="d-none">
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+        </div>
+        <button id="pushToTalkBtn">اضغط للتحدث في المجلس</button>
+      </div>
     </div>
-  </div>
 
-  <!-- Socket.io -->
-  <script src="/socket.io/socket.io.js"></script>
-  <!-- (Optional) jQuery, Bootstrap -->
-  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <!-- Socket.io -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- (Optional) jQuery, Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
-  <script>
-    /************************************************
-     *  DESKTOP.JS CODE
-     ************************************************/
+    <script>
+      /************************************************
+       *  DESKTOP.JS CODE
+       ************************************************/
 
-    /* =============== 1) TOP BAR: Date, Prayer Times, Mini Participants =============== */
-    const dateDisplay         = document.getElementById('dateDisplay');
-    const prayerNameElem      = document.getElementById('prayerName');
-    const prayerCountdownElem = document.getElementById('prayerCountdown');
-    const topParticipantGrid  = document.getElementById('topParticipantGrid');
+      /* =============== 1) TOP BAR: Date, Prayer Times, Mini Participants =============== */
+      const dateDisplay = document.getElementById("dateDisplay");
+      const prayerNameElem = document.getElementById("prayerName");
+      const prayerCountdownElem = document.getElementById("prayerCountdown");
+      const topParticipantGrid = document.getElementById("topParticipantGrid");
 
-    // Update Date
-    function updateDateDisplay() {
-      const now = dayjs();
-      // Example format: "الخميس، 14 فبراير 2025" (Day.js default is English if no Arabic locale loaded)
-      dateDisplay.textContent = now.format('dddd, D MMMM YYYY');
-    }
-    updateDateDisplay();
-    setInterval(updateDateDisplay, 60 * 1000);
+      // Update Date
+      function updateDateDisplay() {
+        const now = dayjs();
+        // Example format: "الخميس، 14 فبراير 2025" (Day.js default is English if no Arabic locale loaded)
+        dateDisplay.textContent = now.format("dddd, D MMMM YYYY");
+      }
+      updateDateDisplay();
+      setInterval(updateDateDisplay, 60 * 1000);
 
-    // Static prayer schedule
-    const prayerSchedule = [
-      { name: "الفجر",   hour: 5,  minute: 0 },
-      { name: "الظهر",   hour: 12, minute: 30 },
-      { name: "العصر",   hour: 15, minute: 45 },
-      { name: "المغرب",  hour: 18, minute: 10 },
-      { name: "العشاء",  hour: 20, minute: 0 }
-    ];
+      // Static prayer schedule
+      const prayerSchedule = [
+        { name: "الفجر", hour: 5, minute: 0 },
+        { name: "الظهر", hour: 12, minute: 30 },
+        { name: "العصر", hour: 15, minute: 45 },
+        { name: "المغرب", hour: 18, minute: 10 },
+        { name: "العشاء", hour: 20, minute: 0 },
+      ];
 
-    function getNextPrayer() {
-      const now = dayjs();
-      for (let p of prayerSchedule) {
-        let prayerTime = dayjs().hour(p.hour).minute(p.minute).second(0);
-        if (prayerTime.isAfter(now)) {
-          return { name: p.name, time: prayerTime };
+      function getNextPrayer() {
+        const now = dayjs();
+        for (let p of prayerSchedule) {
+          let prayerTime = dayjs().hour(p.hour).minute(p.minute).second(0);
+          if (prayerTime.isAfter(now)) {
+            return { name: p.name, time: prayerTime };
+          }
+        }
+        // If all passed, show tomorrow's first prayer (fajr)
+        let tomorrowFajr = dayjs()
+          .add(1, "day")
+          .hour(prayerSchedule[0].hour)
+          .minute(prayerSchedule[0].minute)
+          .second(0);
+        return { name: prayerSchedule[0].name + " (غداً)", time: tomorrowFajr };
+      }
+
+      function formatHMS(totalSec) {
+        let h = Math.floor(totalSec / 3600);
+        let m = Math.floor((totalSec % 3600) / 60);
+        let s = totalSec % 60;
+        return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":");
+      }
+
+      function updatePrayerCountdown() {
+        const now = dayjs();
+        const nextP = getNextPrayer();
+        prayerNameElem.textContent = nextP.name;
+
+        let diff = nextP.time.diff(now, "second");
+        if (diff < 0) diff = 0;
+        prayerCountdownElem.textContent = formatHMS(diff);
+      }
+      updatePrayerCountdown();
+      setInterval(updatePrayerCountdown, 1000);
+
+      // Mini participants (top-right)
+      const miniParticipants = {}; // { username: divElem }
+      function addMiniParticipant(user) {
+        // If not already present
+        if (!miniParticipants[user]) {
+          const mini = document.createElement("div");
+          mini.classList.add("mini-participant");
+          mini.textContent = user;
+          topParticipantGrid.appendChild(mini);
+          miniParticipants[user] = mini;
         }
       }
-      // If all passed, show tomorrow's first prayer (fajr)
-      let tomorrowFajr = dayjs().add(1, 'day')
-        .hour(prayerSchedule[0].hour)
-        .minute(prayerSchedule[0].minute)
-        .second(0);
-      return { name: prayerSchedule[0].name + " (غداً)", time: tomorrowFajr };
-    }
-
-    function formatHMS(totalSec) {
-      let h = Math.floor(totalSec / 3600);
-      let m = Math.floor((totalSec % 3600) / 60);
-      let s = totalSec % 60;
-      return [h,m,s].map(n=>String(n).padStart(2,'0')).join(':');
-    }
-
-    function updatePrayerCountdown() {
-      const now = dayjs();
-      const nextP = getNextPrayer();
-      prayerNameElem.textContent = nextP.name;
-
-      let diff = nextP.time.diff(now, 'second');
-      if (diff < 0) diff = 0;
-      prayerCountdownElem.textContent = formatHMS(diff);
-    }
-    updatePrayerCountdown();
-    setInterval(updatePrayerCountdown, 1000);
-
-    // Mini participants (top-right)
-    const miniParticipants = {}; // { username: divElem }
-    function addMiniParticipant(user) {
-      // If not already present
-      if (!miniParticipants[user]) {
-        const mini = document.createElement('div');
-        mini.classList.add('mini-participant');
-        mini.textContent = user;
-        topParticipantGrid.appendChild(mini);
-        miniParticipants[user] = mini;
+      function removeMiniParticipant(user) {
+        if (miniParticipants[user]) {
+          topParticipantGrid.removeChild(miniParticipants[user]);
+          delete miniParticipants[user];
+        }
       }
-    }
-    function removeMiniParticipant(user) {
-      if (miniParticipants[user]) {
-        topParticipantGrid.removeChild(miniParticipants[user]);
-        delete miniParticipants[user];
+      function animateMiniParticipant(user) {
+        if (miniParticipants[user]) {
+          miniParticipants[user].classList.add("speaking");
+          setTimeout(() => {
+            miniParticipants[user].classList.remove("speaking");
+          }, 2000);
+        }
       }
-    }
-    function animateMiniParticipant(user) {
-      if (miniParticipants[user]) {
-        miniParticipants[user].classList.add('speaking');
-        setTimeout(() => {
-          miniParticipants[user].classList.remove('speaking');
-        }, 2000);
-      }
-    }
 
-    /* =============== 2) REGULAR CHAT + PUSH-TO-TALK =============== */
-    const regularChatContainer = document.getElementById('regularChatContainer');
-    const regularWaveform       = document.getElementById('regularWaveform');
-    const regularPushToTalkBtn  = document.getElementById('regularPushToTalkBtn');
-
-    let mainMediaRecorder = null;
-    let mainChunks = [];
-    let mainRecording = false;
-
-    function startMainRecording() {
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-          mainMediaRecorder = new MediaRecorder(stream);
-          mainMediaRecorder.start();
-          mainRecording = true;
-          mainChunks = [];
-
-          regularWaveform.classList.remove('d-none');
-
-          mainMediaRecorder.addEventListener('dataavailable', e => {
-            if (e.data.size > 0) {
-              mainChunks.push(e.data);
-            }
-          });
-          mainMediaRecorder.addEventListener('stop', () => {
-            mainRecording = false;
-            regularWaveform.classList.add('d-none');
-
-            // Combine all chunks
-            const audioBlob = new Blob(mainChunks, { type: 'audio/webm' });
-            const reader = new FileReader();
-            reader.readAsDataURL(audioBlob);
-            reader.onloadend = () => {
-              // Send as normal voiceMessage
-              socket.emit('voiceMessage', {
-                username: desktopUsername,
-                audio: reader.result
-              });
-            };
-          });
-        })
-        .catch(err => console.error('Mic access error:', err));
-    }
-
-    function stopMainRecording() {
-      if (mainRecording && mainMediaRecorder) {
-        mainMediaRecorder.stop();
-      }
-    }
-
-    regularPushToTalkBtn.addEventListener('mousedown', startMainRecording);
-    regularPushToTalkBtn.addEventListener('mouseup', stopMainRecording);
-    regularPushToTalkBtn.addEventListener('touchstart', e => {
-      e.preventDefault();
-      startMainRecording();
-    });
-    regularPushToTalkBtn.addEventListener('touchend', e => {
-      e.preventDefault();
-      stopMainRecording();
-    });
-
-    // Helper: Append message bubble to the regular chat container
-    function appendRegularBubble(html) {
-      const div = document.createElement('div');
-      div.classList.add('chat-bubble');
-      div.innerHTML = html;
-      regularChatContainer.appendChild(div);
-      regularChatContainer.scrollTop = regularChatContainer.scrollHeight;
-    }
-
-    /* =============== 3) GROUP CHAT (المجلس) =============== */
-    const groupChatContainer = document.getElementById('groupChatContainer');
-    const groupChatArea      = document.getElementById('groupChatArea');
-    const pushToTalkBtn      = document.getElementById('pushToTalkBtn');
-    const desktopWaveform    = document.getElementById('desktopWaveform');
-
-    let joinedGroup = false;
-    let groupMediaRecorder;
-    let isGroupRecording = false;
-
-    // Start/stop group streaming
-    function startGroupRecording() {
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-          groupMediaRecorder = new MediaRecorder(stream);
-          groupMediaRecorder.start(100); // chunk every 100ms
-          isGroupRecording = true;
-
-          groupMediaRecorder.addEventListener('dataavailable', event => {
-            const reader = new FileReader();
-            reader.readAsDataURL(event.data);
-            reader.onloadend = () => {
-              socket.emit('groupVoiceChunk', {
-                username: desktopUsername,
-                chunk: reader.result
-              });
-            };
-          });
-          desktopWaveform.classList.remove('d-none');
-        })
-        .catch(err => console.error('Error accessing mic for group:', err));
-    }
-    function stopGroupRecording() {
-      if (isGroupRecording && groupMediaRecorder) {
-        groupMediaRecorder.stop();
-        isGroupRecording = false;
-        desktopWaveform.classList.add('d-none');
-      }
-    }
-    pushToTalkBtn.addEventListener('mousedown', startGroupRecording);
-    pushToTalkBtn.addEventListener('mouseup', stopGroupRecording);
-    pushToTalkBtn.addEventListener('touchstart', e => {
-      e.preventDefault();
-      startGroupRecording();
-    });
-    pushToTalkBtn.addEventListener('touchend', e => {
-      e.preventDefault();
-      stopGroupRecording();
-    });
-
-    // Helper: Append message bubble to the group chat
-    function appendGroupBubble(html) {
-      const div = document.createElement('div');
-      div.classList.add('chat-bubble');
-      div.innerHTML = html;
-      groupChatArea.appendChild(div);
-      groupChatArea.scrollTop = groupChatArea.scrollHeight;
-    }
-
-    /* =============== 4) SOCKET EVENTS =============== */
-    const socket = io();
-    const desktopUsername = "المشاهد";
-
-    // groupActive toggles joining/leaving
-    socket.on('groupActive', data => {
-      if (data.active && !joinedGroup) {
-        socket.emit('joinGroup', { username: desktopUsername });
-        joinedGroup = true;
-        groupChatContainer.style.display = 'block';
-        // Hide regular chat if you want the user to see only the group
-        regularChatContainer.style.display = 'none';
-        regularPushToTalkBtn.style.display = 'none';
-      } else if (!data.active && joinedGroup) {
-        socket.emit('leaveGroup', { username: desktopUsername });
-        joinedGroup = false;
-        groupChatContainer.style.display = 'none';
-        // Show regular again
-        regularChatContainer.style.display = 'block';
-        regularPushToTalkBtn.style.display = 'inline-block';
-        groupChatArea.innerHTML = "";
-        // Clear mini participants if you want
-        topParticipantGrid.innerHTML = "";
-        for (let p in miniParticipants) delete miniParticipants[p];
-      }
-    });
-
-    // If the server sends groupJoined / groupLeft, we can add/remove mini participants
-    socket.on('groupJoined', data => {
-      addMiniParticipant(data.username);
-    });
-    socket.on('groupLeft', data => {
-      removeMiniParticipant(data.username);
-    });
-
-    // groupVoiceChunk -> live audio playback
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    let nextPlayTime = audioContext.currentTime;
-    function base64ToArrayBuffer(base64) {
-      const binaryString = window.atob(base64);
-      const len = binaryString.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      return bytes.buffer;
-    }
-    function playAudioChunk(chunkDataUrl) {
-      const base64 = chunkDataUrl.split(',')[1];
-      const arrayBuffer = base64ToArrayBuffer(base64);
-
-      audioContext.decodeAudioData(arrayBuffer)
-        .then(decodedData => {
-          const source = audioContext.createBufferSource();
-          source.buffer = decodedData;
-          source.connect(audioContext.destination);
-          nextPlayTime = Math.max(nextPlayTime, audioContext.currentTime);
-          source.start(nextPlayTime);
-          nextPlayTime += decodedData.duration;
-        })
-        .catch(err => console.error('Error decoding chunk:', err));
-    }
-    socket.on('groupVoiceChunk', data => {
-      playAudioChunk(data.chunk);
-      animateMiniParticipant(data.username);
-    });
-
-    // Regular chat messages
-    socket.on('textMessage', data => {
-      // Show who sent it
-      appendRegularBubble(`<strong>${data.username}:</strong> ${data.message}`);
-    });
-    socket.on('voiceMessage', data => {
-      appendRegularBubble(
-        `<strong>${data.username} (صوت):</strong> <audio controls src="${data.audio}" autoplay></audio>`
+      /* =============== 2) REGULAR CHAT + PUSH-TO-TALK =============== */
+      const regularChatContainer = document.getElementById(
+        "regularChatContainer"
       );
-    });
-    socket.on('drawing', data => {
-      appendRegularBubble(
-        `<strong>${data.username} (رسم):</strong><br><img src="${data.image}" style="max-width:100%;">`
+      const regularWaveform = document.getElementById("regularWaveform");
+      const regularPushToTalkBtn = document.getElementById(
+        "regularPushToTalkBtn"
       );
-    });
 
-    // Group text/voice
-    socket.on('groupMessage', data => {
-      appendGroupBubble(`<strong>${data.username}:</strong> ${data.message}`);
-    });
-    socket.on('groupVoiceMessage', data => {
-      appendGroupBubble(
-        `<strong>${data.username} (صوت):</strong> <audio controls src="${data.audio}" autoplay></audio>`
-      );
-      animateMiniParticipant(data.username);
-    });
-  </script>
-</body>
+      let mainMediaRecorder = null;
+      let mainChunks = [];
+      let mainRecording = false;
+
+      function startMainRecording() {
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((stream) => {
+            mainMediaRecorder = new MediaRecorder(stream);
+            mainMediaRecorder.start();
+            mainRecording = true;
+            mainChunks = [];
+
+            regularWaveform.classList.remove("d-none");
+
+            mainMediaRecorder.addEventListener("dataavailable", (e) => {
+              if (e.data.size > 0) {
+                mainChunks.push(e.data);
+              }
+            });
+            mainMediaRecorder.addEventListener("stop", () => {
+              mainRecording = false;
+              regularWaveform.classList.add("d-none");
+
+              // Combine all chunks
+              const audioBlob = new Blob(mainChunks, { type: "audio/webm" });
+              const reader = new FileReader();
+              reader.readAsDataURL(audioBlob);
+              reader.onloadend = () => {
+                // Send as normal voiceMessage
+                socket.emit("voiceMessage", {
+                  username: desktopUsername,
+                  audio: reader.result,
+                });
+              };
+            });
+          })
+          .catch((err) => console.error("Mic access error:", err));
+      }
+
+      function stopMainRecording() {
+        if (mainRecording && mainMediaRecorder) {
+          mainMediaRecorder.stop();
+        }
+      }
+
+      regularPushToTalkBtn.addEventListener("mousedown", startMainRecording);
+      regularPushToTalkBtn.addEventListener("mouseup", stopMainRecording);
+      regularPushToTalkBtn.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        startMainRecording();
+      });
+      regularPushToTalkBtn.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        stopMainRecording();
+      });
+
+      // Helper: Append message bubble to the regular chat container
+      function appendRegularBubble(html) {
+        const div = document.createElement("div");
+        div.classList.add("chat-bubble");
+        div.innerHTML = html;
+        regularChatContainer.appendChild(div);
+        regularChatContainer.scrollTop = regularChatContainer.scrollHeight;
+      }
+
+      /* =============== 3) GROUP CHAT (المجلس) =============== */
+      const groupChatContainer = document.getElementById("groupChatContainer");
+      const groupChatArea = document.getElementById("groupChatArea");
+      const pushToTalkBtn = document.getElementById("pushToTalkBtn");
+      const desktopWaveform = document.getElementById("desktopWaveform");
+
+      let joinedGroup = false;
+      let groupMediaRecorder;
+      let isGroupRecording = false;
+
+      // Start/stop group streaming
+      function startGroupRecording() {
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((stream) => {
+            groupMediaRecorder = new MediaRecorder(stream);
+            groupMediaRecorder.start(100); // chunk every 100ms
+            isGroupRecording = true;
+
+            groupMediaRecorder.addEventListener("dataavailable", (event) => {
+              const reader = new FileReader();
+              reader.readAsDataURL(event.data);
+              reader.onloadend = () => {
+                socket.emit("groupVoiceChunk", {
+                  username: desktopUsername,
+                  chunk: reader.result,
+                });
+              };
+            });
+            desktopWaveform.classList.remove("d-none");
+          })
+          .catch((err) => console.error("Error accessing mic for group:", err));
+      }
+      function stopGroupRecording() {
+        if (isGroupRecording && groupMediaRecorder) {
+          groupMediaRecorder.stop();
+          isGroupRecording = false;
+          desktopWaveform.classList.add("d-none");
+        }
+      }
+      pushToTalkBtn.addEventListener("mousedown", startGroupRecording);
+      pushToTalkBtn.addEventListener("mouseup", stopGroupRecording);
+      pushToTalkBtn.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        startGroupRecording();
+      });
+      pushToTalkBtn.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        stopGroupRecording();
+      });
+
+      // Helper: Append message bubble to the group chat
+      function appendGroupBubble(html) {
+        const div = document.createElement("div");
+        div.classList.add("chat-bubble");
+        div.innerHTML = html;
+        groupChatArea.appendChild(div);
+        groupChatArea.scrollTop = groupChatArea.scrollHeight;
+      }
+
+      /* =============== 4) SOCKET EVENTS =============== */
+      const socket = io();
+      const desktopUsername = "المشاهد";
+
+      // groupActive toggles joining/leaving
+      socket.on("groupActive", (data) => {
+        if (data.active && !joinedGroup) {
+          socket.emit("joinGroup", { username: desktopUsername });
+          joinedGroup = true;
+          groupChatContainer.style.display = "block";
+          // Hide regular chat if you want the user to see only the group
+          regularChatContainer.style.display = "none";
+          regularPushToTalkBtn.style.display = "none";
+        } else if (!data.active && joinedGroup) {
+          socket.emit("leaveGroup", { username: desktopUsername });
+          joinedGroup = false;
+          groupChatContainer.style.display = "none";
+          // Show regular again
+          regularChatContainer.style.display = "block";
+          regularPushToTalkBtn.style.display = "inline-block";
+          groupChatArea.innerHTML = "";
+          // Clear mini participants if you want
+          topParticipantGrid.innerHTML = "";
+          for (let p in miniParticipants) delete miniParticipants[p];
+        }
+      });
+
+      // If the server sends groupJoined / groupLeft, we can add/remove mini participants
+      socket.on("groupJoined", (data) => {
+        addMiniParticipant(data.username);
+      });
+      socket.on("groupLeft", (data) => {
+        removeMiniParticipant(data.username);
+      });
+
+      // groupVoiceChunk -> live audio playback
+      const audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
+      let nextPlayTime = audioContext.currentTime;
+      function base64ToArrayBuffer(base64) {
+        const binaryString = window.atob(base64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes.buffer;
+      }
+      function playAudioChunk(chunkDataUrl) {
+        const base64 = chunkDataUrl.split(",")[1];
+        const arrayBuffer = base64ToArrayBuffer(base64);
+
+        audioContext
+          .decodeAudioData(arrayBuffer)
+          .then((decodedData) => {
+            const source = audioContext.createBufferSource();
+            source.buffer = decodedData;
+            source.connect(audioContext.destination);
+            nextPlayTime = Math.max(nextPlayTime, audioContext.currentTime);
+            source.start(nextPlayTime);
+            nextPlayTime += decodedData.duration;
+          })
+          .catch((err) => console.error("Error decoding chunk:", err));
+      }
+      socket.on("groupVoiceChunk", (data) => {
+        playAudioChunk(data.chunk);
+        animateMiniParticipant(data.username);
+      });
+
+      // Regular chat messages
+      socket.on("textMessage", (data) => {
+        // Show who sent it
+        appendRegularBubble(
+          `<strong>${data.username}:</strong> ${data.message}`
+        );
+      });
+      socket.on("voiceMessage", (data) => {
+        appendRegularBubble(
+          `<strong>${data.username} (صوت):</strong> <audio controls src="${data.audio}" autoplay></audio>`
+        );
+      });
+      socket.on("drawing", (data) => {
+        appendRegularBubble(
+          `<strong>${data.username} (رسم):</strong><br><img src="${data.image}" style="max-width:100%;">`
+        );
+      });
+
+      // Group text/voice
+      socket.on("groupMessage", (data) => {
+        appendGroupBubble(`<strong>${data.username}:</strong> ${data.message}`);
+      });
+      socket.on("groupVoiceMessage", (data) => {
+        appendGroupBubble(
+          `<strong>${data.username} (صوت):</strong> <audio controls src="${data.audio}" autoplay></audio>`
+        );
+        animateMiniParticipant(data.username);
+      });
+    </script>
+  </body>
 </html>
