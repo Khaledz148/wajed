@@ -10,7 +10,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <!-- Google Font: Cairo -->
   <link href="https://fonts.googleapis.com/css?family=Cairo&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css">
   <style>
     :root {
       --color1: #DCD7C9;
@@ -56,6 +55,11 @@
       margin-bottom: 20px;
       border-radius: 8px;
     }
+    /* Add a chat area element so desktop.js can append messages */
+    #chatArea {
+      height: 100%;
+      overflow-y: auto;
+    }
     /* Group Chat Container */
     #groupChatContainer {
       border: 2px solid var(--color4);
@@ -64,6 +68,15 @@
       margin-bottom: 20px;
       border-radius: 8px;
       display: none;
+    }
+    /* Group Chat Area */
+    #groupChatArea {
+      height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--color4);
+      padding: 5px;
+      margin-bottom: 10px;
+      border-radius: 5px;
     }
     /* Participant grid */
     #participantGrid {
@@ -83,7 +96,6 @@
       align-items: center;
       justify-content: center;
       font-weight: bold;
-      color: var(--color4);
     }
     .participant.speaking {
       border-color: var(--color2);
@@ -93,16 +105,6 @@
       0% { box-shadow: 0 0 5px var(--color2); }
       50% { box-shadow: 0 0 20px var(--color2); }
       100% { box-shadow: 0 0 5px var(--color2); }
-    }
-    /* Group chat area */
-    #groupChatArea {
-      height: 200px;
-      overflow-y: auto;
-      border: 2px solid var(--color4);
-      background: var(--color1);
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 8px;
     }
     /* Desktop waveform indicator for push-to-talk */
     #desktopWaveform {
@@ -154,6 +156,7 @@
     <!-- Regular Chat Container -->
     <div id="regularChatContainer">
       <!-- Chat messages appear here -->
+      <div id="chatArea"></div>
     </div>
     
     <!-- Group Chat Container (المجلس) -->
@@ -171,9 +174,8 @@
     </div>
   </div>
 
-  <!-- Socket.io -->
+  <!-- Socket.io and Scripts -->
   <script src="/socket.io/socket.io.js"></script>
-  <!-- jQuery, Bootstrap, and Particles.js -->
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
@@ -183,25 +185,12 @@
       "particles": {
         "number": {
           "value": 80,
-          "density": {
-            "enable": true,
-            "value_area": 800
-          }
+          "density": { "enable": true, "value_area": 800 }
         },
-        "color": {
-          "value": "#A27B5C"
-        },
-        "shape": {
-          "type": "circle"
-        },
-        "opacity": {
-          "value": 0.5,
-          "random": false
-        },
-        "size": {
-          "value": 3,
-          "random": true
-        },
+        "color": { "value": "#A27B5C" },
+        "shape": { "type": "circle" },
+        "opacity": { "value": 0.5, "random": false },
+        "size": { "value": 3, "random": true },
         "line_linked": {
           "enable": true,
           "distance": 150,
@@ -221,26 +210,16 @@
       "interactivity": {
         "detect_on": "canvas",
         "events": {
-          "onhover": {
-            "enable": true,
-            "mode": "grab"
-          },
-          "onclick": {
-            "enable": true,
-            "mode": "push"
-          },
+          "onhover": { "enable": true, "mode": "grab" },
+          "onclick": { "enable": true, "mode": "push" },
           "resize": true
         },
         "modes": {
           "grab": {
             "distance": 140,
-            "line_linked": {
-              "opacity": 1
-            }
+            "line_linked": { "opacity": 1 }
           },
-          "push": {
-            "particles_nb": 4
-          }
+          "push": { "particles_nb": 4 }
         }
       },
       "retina_detect": true

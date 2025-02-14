@@ -47,7 +47,7 @@ io.on('connection', (socket) => {
     io.to('majlis').emit('groupMessage', data);
   });
 
-  // NEW: Live streaming of audio chunks from push-to-talk
+  // Live streaming of audio chunks from push-to-talk
   socket.on('groupVoiceChunk', (data) => {
     io.to('majlis').emit('groupVoiceChunk', data);
   });

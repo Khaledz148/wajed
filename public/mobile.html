@@ -2,15 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تطبيق الدردشة - الهاتف المحمول</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>واجهة الهاتف المحمول</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <!-- FontAwesome for icons -->
+  <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <!-- Google Font: Cairo -->
   <link href="https://fonts.googleapis.com/css?family=Cairo&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css">
   <style>
     :root {
       --color1: #DCD7C9;
@@ -24,79 +23,57 @@
       color: var(--color4);
       margin: 0;
       padding: 0;
-      overflow: hidden;
+      position: relative;
+      overflow-x: hidden;
+      font-size: 1.3em;
     }
-    .navbar {
-      background-color: var(--color2);
-      color: var(--color1);
+    /* Particles background */
+    #particles-js {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
     }
-    .navbar .navbar-brand,
-    .navbar button {
-      color: var(--color1);
+    .container {
+      margin-top: 20px;
+      position: relative;
+      z-index: 1;
     }
-    /* Regular Chat UI */
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    /* Regular Chat Container */
     #regularChatContainer {
-      display: block;
-    }
-    #chatArea {
-      background-color: var(--color1);
+      border: 2px solid var(--color4);
+      background: var(--color1);
       padding: 10px;
+      height: 300px;
       overflow-y: auto;
-      height: calc(100vh - 240px);
+      margin-bottom: 20px;
+      border-radius: 8px;
     }
-    .input-area {
-      display: flex;
-      background-color: var(--color3);
-      padding: 10px;
-    }
-    .input-area input {
-      flex: 1;
-      margin-right: 5px;
-      border: 1px solid var(--color4);
-    }
-    .input-area button {
-      background-color: var(--color2);
-      border: none;
-      color: var(--color1);
-    }
-    .waveform {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 30px;
-      margin-top: 5px;
-    }
-    .waveform .bar {
-      width: 4px;
-      height: 10px;
-      margin: 0 2px;
-      background-color: var(--color2);
-      animation: pulse 1s infinite;
-    }
-    .waveform .bar:nth-child(2) { animation-delay: 0.2s; }
-    .waveform .bar:nth-child(3) { animation-delay: 0.4s; }
-    .waveform .bar:nth-child(4) { animation-delay: 0.6s; }
-    .waveform .bar:nth-child(5) { animation-delay: 0.8s; }
-    @keyframes pulse {
-      0% { height: 10px; }
-      50% { height: 20px; }
-      100% { height: 10px; }
-    }
-    .chat-bubble {
-      margin-bottom: 10px;
-      padding: 8px 12px;
-      border-radius: 15px;
-      max-width: 80%;
-      background-color: var(--color3);
-      color: var(--color1);
-      margin-left: auto;
-    }
-    /* Group Chat UI */
+    /* Group Chat Container */
     #groupChatContainer {
-      display: none;
-      background-color: var(--color1);
+      border: 2px solid var(--color4);
+      background: var(--color1);
       padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      display: none;
     }
+    /* Chat Areas */
+    #chatArea, #groupChatArea {
+      height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--color4);
+      padding: 5px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+    /* Participant grid */
     #participantGrid {
       display: flex;
       flex-wrap: wrap;
@@ -105,8 +82,8 @@
       margin-bottom: 10px;
     }
     .participant {
-      width: 80px;
-      height: 80px;
+      width: 100px;
+      height: 100px;
       background-color: var(--color1);
       border: 2px solid var(--color4);
       border-radius: 10px;
@@ -114,130 +91,178 @@
       align-items: center;
       justify-content: center;
       font-weight: bold;
-      color: var(--color4);
     }
     .participant.speaking {
       border-color: var(--color2);
       animation: wave 1s infinite;
     }
-    #groupChatArea {
-      height: 150px;
-      overflow-y: auto;
-      border: 1px solid var(--color4);
-      background-color: var(--color1);
-      padding: 10px;
-      margin-bottom: 10px;
+    @keyframes wave {
+      0% { box-shadow: 0 0 5px var(--color2); }
+      50% { box-shadow: 0 0 20px var(--color2); }
+      100% { box-shadow: 0 0 5px var(--color2); }
     }
-    /* Improved Push-to-Talk button design */
-    #groupPushToTalkBtn {
-      width: 100%;
-      background: linear-gradient(45deg, var(--color2), var(--color4));
-      border: none;
-      color: var(--color1);
-      padding: 15px;
-      margin-bottom: 10px;
-      border-radius: 25px;
-      font-size: 1.2em;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    #mobileDesktopWaveform {
+    /* Desktop waveform indicator for push-to-talk */
+    #desktopWaveform {
       display: flex;
       justify-content: center;
       align-items: center;
       height: 30px;
-      margin: 10px 0;
+      margin: 10px auto;
     }
-    #mobileDesktopWaveform.d-none {
+    #desktopWaveform.d-none {
       display: none;
     }
-    @media (max-width: 768px) {
-      .input-area {
-        flex-direction: column;
-      }
-      .input-area input {
-        margin: 0 0 5px 0;
-      }
-    }
-    /* Name Modal Styles */
-    .modal-content {
-      background-color: var(--color1);
-      color: var(--color4);
-    }
-    .modal-header, .modal-footer {
+    #desktopWaveform .bar {
+      width: 6px;
+      height: 15px;
+      margin: 0 3px;
       background-color: var(--color2);
+      animation: pulse 1s infinite;
     }
-    .modal-header .modal-title, .modal-footer button {
+    #desktopWaveform .bar:nth-child(2) { animation-delay: 0.2s; }
+    #desktopWaveform .bar:nth-child(3) { animation-delay: 0.4s; }
+    #desktopWaveform .bar:nth-child(4) { animation-delay: 0.6s; }
+    #desktopWaveform .bar:nth-child(5) { animation-delay: 0.8s; }
+    @keyframes pulse {
+      0% { height: 15px; }
+      50% { height: 30px; }
+      100% { height: 15px; }
+    }
+    /* Push-to-Talk button */
+    #pushToTalkBtn {
+      width: 100%;
+      padding: 15px;
+      background-color: var(--color2);
+      border: none;
       color: var(--color1);
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1.2em;
+    }
+    /* Inputs and buttons for chat */
+    input, button {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid var(--color4);
+    }
+    button {
+      background-color: var(--color2);
+      color: var(--color1);
+      border: none;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <!-- Header Navbar -->
-  <nav class="navbar navbar-light">
-    <span class="navbar-brand">تطبيق الدردشة</span>
-    <div>
-      <!-- Removed drawing button -->
-      <button id="groupChatBtn" class="btn btn-outline-light mx-1" title="المجلس">
-        <i class="fas fa-users"></i>
-        <span id="groupCountBadge" class="badge badge-danger">0</span>
+  <!-- Particles Background -->
+  <div id="particles-js"></div>
+  
+  <div class="container">
+    <h1>واجهة الهاتف المحمول</h1>
+    <!-- Toggle Group Mode Button -->
+    <button id="groupChatBtn">انضم للمجلس</button>
+    
+    <!-- Regular Chat Container -->
+    <div id="regularChatContainer">
+      <h2>الدردشة العادية</h2>
+      <div id="chatArea"></div>
+      <input id="chatInput" placeholder="اكتب رسالة">
+      <button id="sendTextBtn">إرسال</button>
+      <button id="voiceRecordBtn">
+        <i id="micIcon" class="fa fa-microphone"></i> سجل صوتي
       </button>
+      <div id="waveform" class="d-none"></div>
     </div>
-  </nav>
-
-  <!-- Regular Chat Container -->
-  <div id="regularChatContainer">
-    <div id="chatArea"></div>
-    <div class="input-area">
-      <input type="text" id="chatInput" class="form-control" placeholder="اكتب رسالتك...">
-      <button id="sendTextBtn" class="btn"><i class="fas fa-paper-plane"></i></button>
-      <button id="voiceRecordBtn" class="btn btn-success mx-1">
-        <i id="micIcon" class="fas fa-microphone"></i>
-      </button>
-    </div>
-    <div id="waveform" class="waveform d-none">
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
+    
+    <!-- Group Chat Container (المجلس) -->
+    <div id="groupChatContainer">
+      <h2>المجلس</h2>
+      <div id="participantGrid"></div>
+      <div id="groupChatArea"></div>
+      <input id="groupChatInput" placeholder="رسالة للمجلس">
+      <button id="sendGroupTextBtn">إرسال</button>
+      <div id="desktopWaveform" class="d-none">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+      <!-- Note: The button ID here is "pushToTalkBtn" which is now used in mobile.js -->
+      <button id="pushToTalkBtn">اضغط للتحدث</button>
+      <div id="groupCountBadge"></div>
     </div>
   </div>
 
-  <!-- Group Chat Container (المجلس) -->
-  <div id="groupChatContainer">
-    <div id="participantGrid"></div>
-    <div id="groupChatArea"></div>
-    <div id="mobileDesktopWaveform" class="waveform d-none">
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-    </div>
-    <button id="groupPushToTalkBtn" class="btn">اضغط للتحدث</button>
-  </div>
-
-  <!-- Name Entry Modal -->
-  <div class="modal" id="nameModal" tabindex="-1" role="dialog" aria-labelledby="nameModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+  <!-- Name Modal (Bootstrap modal) -->
+  <div class="modal" tabindex="-1" role="dialog" id="nameModal">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="nameModalLabel">أدخل اسمك</h5>
+          <h5 class="modal-title">ادخل اسمك</h5>
         </div>
         <div class="modal-body">
-          <input type="text" id="usernameInput" class="form-control" placeholder="اسم المستخدم">
+          <input type="text" id="usernameInput" placeholder="اسمك" class="form-control">
         </div>
         <div class="modal-footer">
-          <button type="button" id="saveUsernameBtn" class="btn btn-light">حفظ</button>
+          <button id="saveUsernameBtn" class="btn btn-primary">حفظ</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Socket.io, jQuery, Bootstrap JS -->
+  <!-- Socket.io and Scripts -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <script src="/js/mobile.js"></script>
+  <script>
+    particlesJS("particles-js", {
+      "particles": {
+        "number": {
+          "value": 80,
+          "density": { "enable": true, "value_area": 800 }
+        },
+        "color": { "value": "#A27B5C" },
+        "shape": { "type": "circle" },
+        "opacity": { "value": 0.5, "random": false },
+        "size": { "value": 3, "random": true },
+        "line_linked": {
+          "enable": true,
+          "distance": 150,
+          "color": "#3F4F44",
+          "opacity": 0.4,
+          "width": 1
+        },
+        "move": {
+          "enable": true,
+          "speed": 4,
+          "direction": "none",
+          "random": false,
+          "straight": false,
+          "out_mode": "out"
+        }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": { "enable": true, "mode": "grab" },
+          "onclick": { "enable": true, "mode": "push" },
+          "resize": true
+        },
+        "modes": {
+          "grab": {
+            "distance": 140,
+            "line_linked": { "opacity": 1 }
+          },
+          "push": { "particles_nb": 4 }
+        }
+      },
+      "retina_detect": true
+    });
+  </script>
 </body>
 </html>

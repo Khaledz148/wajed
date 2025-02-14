@@ -2,9 +2,9 @@
 
 const socket = io();
 let inGroup = false;
-let username = ""; // Will be set via the name modal
+let username = ""; // will be set via modal
 
-// ----- Name Modal Handling -----
+// ---------- Name Modal Handling ----------
 const nameModal = $('#nameModal');
 const usernameInput = document.getElementById('usernameInput');
 const saveUsernameBtn = document.getElementById('saveUsernameBtn');
@@ -16,9 +16,9 @@ saveUsernameBtn.addEventListener('click', () => {
     nameModal.modal('hide');
   }
 });
-nameModal.modal('show'); // Force name entry on load
+nameModal.modal('show');  // force name entry on load
 
-// ----- Regular Chat Elements -----
+// ---------- Regular Chat Elements ----------
 const regularChatContainer = document.getElementById('regularChatContainer');
 const chatArea = document.getElementById('chatArea');
 const chatInput = document.getElementById('chatInput');
@@ -27,13 +27,19 @@ const voiceRecordBtn = document.getElementById('voiceRecordBtn');
 const micIcon = document.getElementById('micIcon');
 const waveform = document.getElementById('waveform');
 
-// ----- Group Chat Elements -----
+// ---------- Group Chat Elements ----------
 const groupChatContainer = document.getElementById('groupChatContainer');
 const participantGrid = document.getElementById('participantGrid');
-const groupPushToTalkBtn = document.getElementById('groupPushToTalkBtn');
-const mobileDesktopWaveform = document.getElementById('mobileDesktopWaveform');
+const groupChatArea = document.getElementById('groupChatArea');
+const groupChatInput = document.getElementById('groupChatInput');
+const sendGroupTextBtn = document.getElementById('sendGroupTextBtn');
+// FIX: Change element ID from "groupPushToTalkBtn" to "pushToTalkBtn" as in the HTML.
+const groupPushToTalkBtn = document.getElementById('pushToTalkBtn');
+// FIX: Change "mobileDesktopWaveform" to "desktopWaveform" to match HTML.
+const desktopWaveform = document.getElementById('desktopWaveform');
 const groupCountBadge = document.getElementById('groupCountBadge');
 
+// ---------- Participant Management for Group Mode ----------
 const participants = {}; // key: username, value: element
 function addParticipant(user) {
   if (!participants[user]) {
@@ -61,7 +67,7 @@ function animateParticipant(user) {
   }
 }
 
-// ----- Toggle Group Mode -----
+// ---------- Toggle Group Mode ----------
 const groupChatBtn = document.getElementById('groupChatBtn');
 groupChatBtn.addEventListener('click', () => {
   if (!inGroup) {
@@ -70,15 +76,17 @@ groupChatBtn.addEventListener('click', () => {
     regularChatContainer.style.display = 'none';
     groupChatContainer.style.display = 'block';
     addParticipant(username);
+    groupChatBtn.innerText = "غادر المجلس";
   } else {
     socket.emit('leaveGroup', { username });
     inGroup = false;
     groupChatContainer.style.display = 'none';
     regularChatContainer.style.display = 'block';
+    groupChatBtn.innerText = "انضم للمجلس";
   }
 });
 
-// ----- Regular Chat Functions -----
+// ---------- Regular Chat Functions ----------
 function sendTextMessage() {
   const text = chatInput.value.trim();
   if (!text) return;
@@ -124,14 +132,15 @@ voiceRecordBtn.addEventListener('click', () => {
   }
 });
 
-// ----- Group Chat Push-to-Talk (Live Streaming) -----
+// ---------- Group Chat Push-to-Talk (Live Streaming) ----------
 let groupMediaRecorder;
 let isGroupRecording = false;
+
 function startGroupRecording() {
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
       groupMediaRecorder = new MediaRecorder(stream);
-      groupMediaRecorder.start(100); // Send chunks every 100ms
+      groupMediaRecorder.start(250); // send chunks every 250ms
       isGroupRecording = true;
       groupMediaRecorder.addEventListener("dataavailable", event => {
         const reader = new FileReader();
@@ -140,7 +149,7 @@ function startGroupRecording() {
           socket.emit('groupVoiceChunk', { username, chunk: reader.result });
         };
       });
-      mobileDesktopWaveform.classList.remove('d-none');
+      desktopWaveform.classList.remove('d-none');
     })
     .catch(err => console.error('Error accessing microphone for group:', err));
 }
@@ -148,7 +157,7 @@ function stopGroupRecording() {
   if (isGroupRecording) {
     groupMediaRecorder.stop();
     isGroupRecording = false;
-    mobileDesktopWaveform.classList.add('d-none');
+    desktopWaveform.classList.add('d-none');
   }
 }
 groupPushToTalkBtn.addEventListener('mousedown', startGroupRecording);
@@ -156,12 +165,22 @@ groupPushToTalkBtn.addEventListener('mouseup', stopGroupRecording);
 groupPushToTalkBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startGroupRecording(); });
 groupPushToTalkBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopGroupRecording(); });
 
-// ----- Socket Listeners -----
+// ---------- Group Chat Text Messaging ----------
+sendGroupTextBtn.addEventListener('click', () => {
+  const text = groupChatInput.value.trim();
+  if (text) {
+    socket.emit('groupMessage', { username, message: text });
+    groupChatInput.value = '';
+  }
+});
+
+// ---------- Socket Listeners ----------
 // Regular chat messages
 socket.on('textMessage', (data) => {
+  const htmlMsg = `<strong>رسالة:</strong> ${data.message}`;
   const bubble = document.createElement('div');
   bubble.classList.add('chat-bubble');
-  bubble.innerHTML = `<strong>رسالة:</strong> ${data.message}`;
+  bubble.innerHTML = htmlMsg;
   chatArea.appendChild(bubble);
   chatArea.scrollTop = chatArea.scrollHeight;
 });
@@ -172,54 +191,60 @@ socket.on('voiceMessage', (data) => {
   chatArea.appendChild(bubble);
   chatArea.scrollTop = chatArea.scrollHeight;
 });
+socket.on('drawing', (data) => {
+  const bubble = document.createElement('div');
+  bubble.classList.add('chat-bubble');
+  bubble.innerHTML = `<strong>رسم:</strong><br><img src="${data.image}" style="max-width:100%;">`;
+  chatArea.appendChild(bubble);
+  chatArea.scrollTop = chatArea.scrollHeight;
+});
 
 // Group chat messages
 socket.on('groupMessage', (data) => {
   const htmlMsg = `<strong>${data.username}:</strong> ${data.message}`;
   const div = document.createElement('div');
   div.innerHTML = htmlMsg;
-  document.getElementById('groupChatArea').appendChild(div);
-  document.getElementById('groupChatArea').scrollTop = document.getElementById('groupChatArea').scrollHeight;
+  groupChatArea.appendChild(div);
+  groupChatArea.scrollTop = groupChatArea.scrollHeight;
+  speakText(extractMessageText(htmlMsg));
 });
 socket.on('groupVoiceMessage', (data) => {
   const div = document.createElement('div');
   div.innerHTML = `<strong>${data.username} (صوت):</strong> <audio controls src="${data.audio}" autoplay></audio>`;
-  document.getElementById('groupChatArea').appendChild(div);
-  document.getElementById('groupChatArea').scrollTop = document.getElementById('groupChatArea').scrollHeight;
+  groupChatArea.appendChild(div);
+  groupChatArea.scrollTop = groupChatArea.scrollHeight;
   animateParticipant(data.username);
 });
-
-// ----- Smoother Live Audio Streaming with Web Audio API -----
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-let nextPlayTime = audioContext.currentTime;
-function base64ToArrayBuffer(base64) {
-  const binaryString = window.atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes.buffer;
-}
-function playAudioChunk(chunkDataUrl) {
-  const base64 = chunkDataUrl.split(',')[1];
-  const arrayBuffer = base64ToArrayBuffer(base64);
-  audioContext.decodeAudioData(arrayBuffer)
-    .then(decodedData => {
-      const source = audioContext.createBufferSource();
-      source.buffer = decodedData;
-      source.connect(audioContext.destination);
-      nextPlayTime = Math.max(nextPlayTime, audioContext.currentTime);
-      source.start(nextPlayTime);
-      nextPlayTime += decodedData.duration;
-    })
-    .catch(error => console.error('Error decoding audio chunk:', error));
-}
+// Live audio chunks for near-real-time streaming in group chat
 socket.on('groupVoiceChunk', (data) => {
-  playAudioChunk(data.chunk);
+  const audio = new Audio(data.chunk);
+  audio.play();
 });
 
-// ----- Update group count badge -----
+// Update group count badge
 socket.on('groupCount', (data) => {
-  groupCountBadge.innerText = data.count;
+  if (groupCountBadge) {
+    groupCountBadge.innerText = data.count;
+  }
 });
+// Update participant grid on join/leave
+socket.on('groupJoined', (data) => { addParticipant(data.username); });
+socket.on('groupLeft', (data) => { removeParticipant(data.username); });
+
+// ---------- Helper Functions for TTS ----------
+function extractMessageText(html) {
+  let temp = document.createElement('div');
+  temp.innerHTML = html;
+  let text = temp.innerText || temp.textContent || "";
+  let colonIndex = text.indexOf(':');
+  if (colonIndex !== -1) {
+    return text.substring(colonIndex + 1).trim();
+  }
+  return text.trim();
+}
+function speakText(text) {
+  if (text === "") return;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'ar-SA';
+  speechSynthesis.speak(utterance);
+}
