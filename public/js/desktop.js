@@ -3,7 +3,7 @@
 const socket = io();
 
 const regularChatContainer = document.getElementById('regularChatContainer');
-const chatArea = document.getElementById('regularChatContainer');
+const chatArea = document.getElementById('regularChatContainer'); // For regular messages
 const groupChatContainer = document.getElementById('groupChatContainer');
 const groupChatArea = document.getElementById('groupChatArea');
 const pushToTalkBtn = document.getElementById('pushToTalkBtn');
@@ -12,6 +12,7 @@ const desktopWaveform = document.getElementById('desktopWaveform');
 
 let groupMediaRecorder;
 let isGroupRecording = false;
+let isDesktopInGroup = false;
 
 // ----- Participant Management -----
 const participants = {};
@@ -38,22 +39,43 @@ function animateParticipant(user) {
     setTimeout(() => { elem.classList.remove('speaking'); }, 2000);
   }
 }
+
 const desktopUsername = "المشاهد";
 addParticipant(desktopUsername);
 
-// ***** NEW: Join the group so this client receives group events *****
-socket.emit('joinGroup', { username: desktopUsername });
+// ----- Instead of auto-joining, create a "Join Group Chat" button ----- 
+const joinGroupBtn = document.createElement('button');
+joinGroupBtn.innerText = 'انضم إلى المجلس';
+joinGroupBtn.classList.add('btn', 'btn-primary');
+joinGroupBtn.style.margin = '10px';
+joinGroupBtn.addEventListener('click', () => {
+  socket.emit('joinGroup', { username: desktopUsername });
+  isDesktopInGroup = true;
+  // Hide the join button and switch UI to group chat
+  joinGroupBtn.style.display = 'none';
+  groupChatContainer.style.display = 'block';
+  regularChatContainer.style.display = 'none';
+});
 
-// ----- Automatic UI Switching Based on Group Activity -----
+// ----- Listen for group activity ----- 
 socket.on('groupActive', (data) => {
   if (data.active) {
-    groupChatContainer.style.display = 'block';
-    regularChatContainer.style.display = 'none';
+    // If the group is active and we haven't joined yet, show the join button
+    if (!isDesktopInGroup && !regularChatContainer.contains(joinGroupBtn)) {
+      regularChatContainer.appendChild(joinGroupBtn);
+    }
   } else {
+    // When the group becomes inactive, return to the regular chat view
+    if (isDesktopInGroup) {
+      isDesktopInGroup = false;
+    }
     groupChatContainer.style.display = 'none';
     regularChatContainer.style.display = 'block';
     participantGrid.innerHTML = "";
     groupChatArea.innerHTML = "";
+    if (regularChatContainer.contains(joinGroupBtn)) {
+      regularChatContainer.removeChild(joinGroupBtn);
+    }
   }
 });
 
@@ -108,15 +130,8 @@ socket.on('groupVoiceMessage', (data) => {
 });
 
 // ----- Smoother Live Audio Streaming with Web Audio API -----
-
-// Create a single AudioContext instance for live audio playback
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-// This will hold the time where the next chunk should be played
 let nextPlayTime = audioContext.currentTime;
-
-/**
- * Helper: Convert base64 to an ArrayBuffer
- */
 function base64ToArrayBuffer(base64) {
   const binaryString = window.atob(base64);
   const len = binaryString.length;
@@ -126,35 +141,25 @@ function base64ToArrayBuffer(base64) {
   }
   return bytes.buffer;
 }
-
-/**
- * Decode and play an audio chunk smoothly.
- * @param {string} chunkDataUrl - The data URL of the audio chunk.
- */
 function playAudioChunk(chunkDataUrl) {
   const base64 = chunkDataUrl.split(',')[1];
   const arrayBuffer = base64ToArrayBuffer(base64);
-
   audioContext.decodeAudioData(arrayBuffer)
     .then(decodedData => {
       const source = audioContext.createBufferSource();
       source.buffer = decodedData;
       source.connect(audioContext.destination);
-
       nextPlayTime = Math.max(nextPlayTime, audioContext.currentTime);
       source.start(nextPlayTime);
       nextPlayTime += decodedData.duration;
     })
     .catch(error => console.error('Error decoding audio chunk:', error));
 }
-
-// Replace the old groupVoiceChunk handler with the new smoother one:
 socket.on('groupVoiceChunk', (data) => {
   playAudioChunk(data.chunk);
 });
 
 // ----- Push-to-Talk for Group Chat (Live Streaming) -----
-// Use MediaRecorder with a 100ms timeslice for near–real–time streaming.
 function startGroupRecording() {
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
