@@ -3,8 +3,7 @@
 const socket = io();
 
 const regularChatContainer = document.getElementById('regularChatContainer');
-// Now using the dedicated chat area element inside regularChatContainer
-const chatArea = document.getElementById('chatArea');
+const chatArea = document.getElementById('regularChatContainer');
 const groupChatContainer = document.getElementById('groupChatContainer');
 const groupChatArea = document.getElementById('groupChatArea');
 const pushToTalkBtn = document.getElementById('pushToTalkBtn');
@@ -14,7 +13,7 @@ const desktopWaveform = document.getElementById('desktopWaveform');
 let groupMediaRecorder;
 let isGroupRecording = false;
 
-// Participant management
+// ----- Participant Management -----
 const participants = {};
 function addParticipant(user) {
   if (!participants[user]) {
@@ -42,7 +41,10 @@ function animateParticipant(user) {
 const desktopUsername = "المشاهد";
 addParticipant(desktopUsername);
 
-// Automatically switch UI based on group activity
+// ***** NEW: Join the group so this client receives group events *****
+socket.emit('joinGroup', { username: desktopUsername });
+
+// ----- Automatic UI Switching Based on Group Activity -----
 socket.on('groupActive', (data) => {
   if (data.active) {
     groupChatContainer.style.display = 'block';
@@ -55,7 +57,7 @@ socket.on('groupActive', (data) => {
   }
 });
 
-// TTS helpers: extract message text and speak it (only the message, not the sender)
+// ----- Text-to-Speech Helpers -----
 function extractMessageText(html) {
   const temp = document.createElement('div');
   temp.innerHTML = html;
@@ -73,7 +75,7 @@ function speakText(text) {
   speechSynthesis.speak(utterance);
 }
 
-// Helper function to append messages and trigger TTS if needed
+// ----- Append Message Helper -----
 function appendMessage(container, message, tts = false) {
   const div = document.createElement('div');
   div.innerHTML = message;
@@ -84,7 +86,7 @@ function appendMessage(container, message, tts = false) {
   }
 }
 
-// Regular chat messages
+// ----- Regular Chat Messages -----
 socket.on('textMessage', (data) => {
   appendMessage(chatArea, `<strong>رسالة:</strong> ${data.message}`, true);
 });
@@ -95,7 +97,7 @@ socket.on('drawing', (data) => {
   appendMessage(chatArea, `<strong>رسم:</strong><br><img src="${data.image}" style="max-width:100%;">`);
 });
 
-// Group chat messages
+// ----- Group Chat Messages -----
 socket.on('groupMessage', (data) => {
   const htmlMsg = `<strong>${data.username}:</strong> ${data.message}`;
   appendMessage(groupChatArea, htmlMsg, true);
@@ -104,22 +106,60 @@ socket.on('groupVoiceMessage', (data) => {
   appendMessage(groupChatArea, `<strong>${data.username} (صوت):</strong> <audio controls src="${data.audio}" autoplay></audio>`);
   animateParticipant(data.username);
 });
-// Live streaming: receive audio chunks
+
+// ----- Smoother Live Audio Streaming with Web Audio API -----
+
+// Create a single AudioContext instance for live audio playback
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+// This will hold the time where the next chunk should be played
+let nextPlayTime = audioContext.currentTime;
+
+/**
+ * Helper: Convert base64 to an ArrayBuffer
+ */
+function base64ToArrayBuffer(base64) {
+  const binaryString = window.atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+/**
+ * Decode and play an audio chunk smoothly.
+ * @param {string} chunkDataUrl - The data URL of the audio chunk.
+ */
+function playAudioChunk(chunkDataUrl) {
+  const base64 = chunkDataUrl.split(',')[1];
+  const arrayBuffer = base64ToArrayBuffer(base64);
+
+  audioContext.decodeAudioData(arrayBuffer)
+    .then(decodedData => {
+      const source = audioContext.createBufferSource();
+      source.buffer = decodedData;
+      source.connect(audioContext.destination);
+
+      nextPlayTime = Math.max(nextPlayTime, audioContext.currentTime);
+      source.start(nextPlayTime);
+      nextPlayTime += decodedData.duration;
+    })
+    .catch(error => console.error('Error decoding audio chunk:', error));
+}
+
+// Replace the old groupVoiceChunk handler with the new smoother one:
 socket.on('groupVoiceChunk', (data) => {
-  const audio = new Audio(data.chunk);
-  audio.play();
+  playAudioChunk(data.chunk);
 });
 
-// Update participant grid
-socket.on('groupJoined', (data) => { addParticipant(data.username); });
-socket.on('groupLeft', (data) => { removeParticipant(data.username); });
-
-// Push-to-Talk: Use MediaRecorder with timeslice for near-real-time audio streaming.
+// ----- Push-to-Talk for Group Chat (Live Streaming) -----
+// Use MediaRecorder with a 100ms timeslice for near–real–time streaming.
 function startGroupRecording() {
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
       groupMediaRecorder = new MediaRecorder(stream);
-      groupMediaRecorder.start(250); // send chunks every 250ms
+      groupMediaRecorder.start(100);
       isGroupRecording = true;
       groupMediaRecorder.addEventListener("dataavailable", event => {
         const reader = new FileReader();
