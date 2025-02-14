@@ -104,18 +104,55 @@ socket.on('groupVoiceMessage', (data) => {
   appendMessage(groupChatArea, `<strong>${data.username} (صوت):</strong> <audio controls src="${data.audio}" autoplay></audio>`);
   animateParticipant(data.username);
 });
-// Live streaming: receive audio chunks
+
+// ----- Smoother Live Audio Streaming with Web Audio API -----
+
+// Create a single AudioContext instance for live audio playback
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+// This will hold the time where the next chunk should be played
+let nextPlayTime = audioContext.currentTime;
+
+/**
+ * Helper: Convert base64 to an ArrayBuffer
+ */
+function base64ToArrayBuffer(base64) {
+  const binaryString = window.atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+/**
+ * Decode and play an audio chunk smoothly.
+ * @param {string} chunkDataUrl - The data URL of the audio chunk.
+ */
+function playAudioChunk(chunkDataUrl) {
+  const base64 = chunkDataUrl.split(',')[1];
+  const arrayBuffer = base64ToArrayBuffer(base64);
+
+  audioContext.decodeAudioData(arrayBuffer)
+    .then(decodedData => {
+      const source = audioContext.createBufferSource();
+      source.buffer = decodedData;
+      source.connect(audioContext.destination);
+
+      nextPlayTime = Math.max(nextPlayTime, audioContext.currentTime);
+      source.start(nextPlayTime);
+      nextPlayTime += decodedData.duration;
+    })
+    .catch(error => console.error('Error decoding audio chunk:', error));
+}
+
+// Replace the old groupVoiceChunk handler with the new smoother one:
 socket.on('groupVoiceChunk', (data) => {
-  const audio = new Audio(data.chunk);
-  audio.play();
+  playAudioChunk(data.chunk);
 });
 
-// ----- Update Participant Grid -----
-socket.on('groupJoined', (data) => { addParticipant(data.username); });
-socket.on('groupLeft', (data) => { removeParticipant(data.username); });
-
 // ----- Push-to-Talk for Group Chat (Live Streaming) -----
-// Use MediaRecorder with a 100ms timeslice for near–real-time streaming.
+// Use MediaRecorder with a 100ms timeslice for near–real–time streaming.
 function startGroupRecording() {
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {

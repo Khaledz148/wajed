@@ -30,8 +30,6 @@ const waveform = document.getElementById('waveform');
 // ----- Group Chat Elements -----
 const groupChatContainer = document.getElementById('groupChatContainer');
 const participantGrid = document.getElementById('participantGrid');
-// (Optional: If you add a group text input, add it here)
-// For push-to-talk:
 const groupPushToTalkBtn = document.getElementById('groupPushToTalkBtn');
 const mobileDesktopWaveform = document.getElementById('mobileDesktopWaveform');
 
@@ -172,6 +170,11 @@ groupPushToTalkBtn.addEventListener('touchstart', (e) => { e.preventDefault(); s
 groupPushToTalkBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopGroupRecording(); });
 
 // ----- Drawing Functions -----
+// Open the drawing modal when the drawing button is clicked
+drawingBtn.addEventListener('click', () => {
+  drawingModal.modal('show');
+});
+
 // Mouse events
 drawingCanvas.addEventListener('mousedown', (e) => {
   drawing = true;
@@ -254,6 +257,9 @@ socket.on('drawing', (data) => {
   chatArea.scrollTop = chatArea.scrollHeight;
 });
 
+// Create a reference for groupChatArea in mobile mode.
+const groupChatArea = document.getElementById('groupChatArea');
+
 // Group chat messages
 socket.on('groupMessage', (data) => {
   const htmlMsg = `<strong>${data.username}:</strong> ${data.message}`;
@@ -269,15 +275,53 @@ socket.on('groupVoiceMessage', (data) => {
   groupChatArea.scrollTop = groupChatArea.scrollHeight;
   animateParticipant(data.username);
 });
-// Live streaming audio chunks
-socket.on('groupVoiceChunk', (data) => {
-  const audio = new Audio(data.chunk);
-  audio.play();
-});
 
-// Update group count badge
-socket.on('groupCount', (data) => {
-  groupCountBadge.innerText = data.count;
+// ----- Smoother Live Audio Streaming with Web Audio API -----
+
+// Create a single AudioContext instance for live audio playback
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+// This will hold the time where the next chunk should be played
+let nextPlayTime = audioContext.currentTime;
+
+/**
+ * Helper: Convert base64 to an ArrayBuffer
+ */
+function base64ToArrayBuffer(base64) {
+  const binaryString = window.atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+/**
+ * Decode and play an audio chunk smoothly.
+ * @param {string} chunkDataUrl - The data URL of the audio chunk.
+ */
+function playAudioChunk(chunkDataUrl) {
+  // Remove the data URL header (e.g., "data:audio/webm;base64,")
+  const base64 = chunkDataUrl.split(',')[1];
+  const arrayBuffer = base64ToArrayBuffer(base64);
+
+  audioContext.decodeAudioData(arrayBuffer)
+    .then(decodedData => {
+      // Create a source node for this decoded audio data.
+      const source = audioContext.createBufferSource();
+      source.buffer = decodedData;
+      source.connect(audioContext.destination);
+
+      // Ensure the next chunk starts at the proper time.
+      nextPlayTime = Math.max(nextPlayTime, audioContext.currentTime);
+      source.start(nextPlayTime);
+      // Increment the next available play time by the duration of this chunk.
+      nextPlayTime += decodedData.duration;
+    })
+    .catch(error => console.error('Error decoding audio chunk:', error));
+}
+
+// Replace old groupVoiceChunk handler with new one for smoother streaming:
+socket.on('groupVoiceChunk', (data) => {
+  playAudioChunk(data.chunk);
 });
-socket.on('groupJoined', (data) => { addParticipant(data.username); });
-socket.on('groupLeft', (data) => { removeParticipant(data.username); });
